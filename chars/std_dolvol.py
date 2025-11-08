@@ -21,7 +21,7 @@ import multiprocessing as mp
 ###################
 # Connect to WRDS #
 ###################
-conn = wrds.Connection(wrds_username='phd22jm', wrds_password='jmwarwickap1998!')
+conn = wrds.Connection()
 print(f"Connected to WRDS successfully!")
 # CRSP Block
 crsp = conn.raw_sql("""
