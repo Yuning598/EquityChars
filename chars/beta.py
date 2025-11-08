@@ -21,7 +21,7 @@ import multiprocessing as mp
 ###################
 # Connect to WRDS #
 ###################
-conn = wrds.Connection()
+conn = wrds.Connection(wrds_username='phd22jm', wrds_password='jmwarwickap1998!')
 print(f"Connected to WRDS successfully!")
 
 # CRSP Block
@@ -31,7 +31,7 @@ crsp = conn.raw_sql("""
                       from crspq.dsf_v2 as a
                       left join ff.factors_daily as b
                       on a.dlycaldt=b.date
-                      where a.dlycaldt >= '01/01/1990'
+                      where a.dlycaldt >= '01/01/1959'
                       """, date_cols=['dlycaldt'])
 
 crsp.rename(columns={'dlycaldt': 'date', 'dlyret': 'ret', 'dlyvol': 'vol'}, inplace=True)

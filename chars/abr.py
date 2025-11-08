@@ -14,7 +14,7 @@ from datetime import datetime
 ###################
 # Connect to WRDS #
 ###################
-conn = wrds.Connection()
+conn = wrds.Connection(wrds_username='phd22jm', wrds_password='jmwarwickap1998!')
 print(f"Connected to WRDS successfully!")
 
 ###################
@@ -27,7 +27,7 @@ comp = conn.raw_sql("""
                     and datafmt = 'STD'
                     and popsrc = 'D'
                     and consol = 'C'
-                    and datadate >= '01/01/1990'
+                    and datadate >= '01/01/1959'
                     """)
 
 comp['datadate'] = pd.to_datetime(comp['datadate'])
@@ -62,15 +62,31 @@ print('='*10, 'ccm data is ready', '='*10)
 ###################
 
 # Report Date of Quarterly Earnings (rdq) may not be trading day, we need to get the first trading day on or after rdq
-# TO DO: check latest date
-crsp_dsi = conn.raw_sql("""
-    select distinct dlycaldt as date
-    from crspq.inddlyseriesdata_ind
-    where indno = 1000502
-    and dlycaldt >= '01/01/1990'
-    """)
+# Recreate legacy DSI table using the CRSP CIZ (v2) format
 
-crsp_dsi['date'] = pd.to_datetime(crsp_dsi['date'])
+sql = """
+select distinct
+    a.dlycaldt    as dlycaldt,
+    a.dlytotret   as vwretd,
+    a.dlyprcret   as vwretx,
+    b.dlytotret   as ewretd,
+    b.dlyprcret   as ewretx,
+    c.dlyprcret   as sprtrn,
+    c.dlyprcind   as spindx,
+    a.dlytotval   as totval,
+    b.dlytotcnt   as totcnt,
+    a.dlyusdval   as usdval,
+    b.dlyusdcnt   as usdcnt
+from crspq.inddlyseriesdata_ind as a
+left join crspq.inddlyseriesdata_ind as b
+    on a.dlycaldt = b.dlycaldt and b.indno = 1000201
+left join crspq.inddlyseriesdata_ind as c
+    on a.dlycaldt = c.dlycaldt and c.indno = 1000502
+where a.indno = 1000200
+  and a.dlycaldt >= '01/01/1959'
+order by a.dlycaldt
+"""
+crsp_dsi = conn.raw_sql(sql, date_cols=['dlycaldt'])[['dlycaldt']].drop_duplicates().rename(columns={'dlycaldt': 'date'})
 
 ccm3 = ccm2.copy()
 for i in range(6):  # we only consider the condition that the day after rdq is not a trading day, which is up to 5 days
@@ -104,7 +120,7 @@ crsp_d = conn.raw_sql("""
                       a.shrout, a.dlycumfacpr, a.dlycumfacshr, a.permno, a.permco, a.dlycaldt,
                       a.cusip, a.hdrcusip, a.siccd
                       from crspq.dsf_v2 as a
-                      where a.dlycaldt >= '01/01/1990'
+                      where a.dlycaldt >= '01/01/1959'
                       and a.primaryexch IN ('N', 'A', 'Q')
                       and a.conditionaltype = 'RW'
                       and a.tradingstatusflg = 'A'
@@ -129,19 +145,7 @@ crsp_d = crsp_d.sort_values(by=['date', 'permno', 'meq'])
 # sprtrn
 # [Instruction1]:https://wrds-www.wharton.upenn.edu/pages/support/support-articles/crsp/stock-v2-siz/recreating-dsi-and-msi-tables/
 # [Instruction2]:https://wrds-www.wharton.upenn.edu/pages/wrds-research/applications/programming-examples-and-other-topics/sp-500-datasets-and-constituents/
-# TODO-later: crspq.inddlyseriesdata_ind
-crspsp500d = conn.raw_sql("""
-    select dlycaldt, dlyprcret
-    from crspq.inddlyseriesdata_ind
-    where indno = 1000502
-    and dlycaldt >= '01/01/1990'
-""")
-crspsp500d.rename(columns={
-    'dlycaldt': 'date',
-    'dlyprcret': 'sprtrn'
-}, inplace=True)
-
-crspsp500d['date'] = pd.to_datetime(crspsp500d['date'])
+crspsp500d = conn.raw_sql(sql, date_cols=['dlycaldt'])[['dlycaldt','sprtrn']].drop_duplicates().rename(columns={'dlycaldt': 'date'})
 
 # abnormal return
 crsp_d = pd.merge(crsp_d, crspsp500d, how='left', on='date')
@@ -216,7 +220,7 @@ print('='*10, 'start populate', '='*10)
 crsp_msf = conn.raw_sql("""
                         select distinct mthcaldt
                         from crspq.msf_v2
-                        where mthcaldt >= '01/01/1990'
+                        where mthcaldt >= '01/01/1959'
                         """)
 crsp_msf.rename(columns={'mthcaldt': 'date'}, inplace=True)
 

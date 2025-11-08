@@ -14,7 +14,7 @@ import pyarrow.feather as feather
 ###################
 # Connect to WRDS #
 ###################
-conn = wrds.Connection()
+conn = wrds.Connection(wrds_username='phd22jm', wrds_password='jmwarwickap1998!')
 print(f"Connected to WRDS successfully!")
 ###################
 # Compustat Block #
@@ -26,7 +26,7 @@ comp = conn.raw_sql("""
                         and datafmt = 'STD'
                         and popsrc = 'D'
                         and consol = 'C'
-                        and datadate >= '01/01/1990'
+                        and datadate >= '01/01/1959'
                         """)
 
 comp['datadate'] = pd.to_datetime(comp['datadate'])
@@ -97,7 +97,7 @@ ccm2['sue'] = (ccm2['eps'] - ccm2['e4'])/ccm2['sue_std']
 crsp_msf = conn.raw_sql("""
                         select distinct mthcaldt
                         from crspq.msf_v2
-                        where mthcaldt >= '01/01/1990'
+                        where mthcaldt >= '01/01/1959'
                         """, date_cols=['mthcaldt'])
 crsp_msf.rename(columns={'mthcaldt': 'date'}, inplace=True)
 

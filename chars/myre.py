@@ -14,12 +14,15 @@ import pyarrow.feather as feather
 ###################
 # Connect to WRDS #
 ###################
-conn = wrds.Connection()
+conn = wrds.Connection(wrds_username='phd22jm', wrds_password='jmwarwickap1998!')
 print(f"Connected to WRDS successfully!")
 
 #########################################################################
 # Merging IBES and CRSP by using ICLINK table. Merging last month price #
 #########################################################################
+
+iclink = pd.read_csv('iclink_ciz.csv')
+iclink.to_feather('../iclink_ciz.feather')
 
 with open('iclink_ciz.feather', 'rb')as f:
     iclink = feather.read_feather(f)

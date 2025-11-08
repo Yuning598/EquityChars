@@ -21,7 +21,6 @@ import multiprocessing as mp
 ###################
 # Connect to WRDS #
 ###################
-# conn = wrds.Connection()
 conn = wrds.Connection(wrds_username='phd22jm', wrds_password='jmwarwickap1998!')
 print(f"Connected to WRDS successfully!")
 
@@ -29,7 +28,7 @@ print(f"Connected to WRDS successfully!")
 crsp = conn.raw_sql("""
                     select a.permno, a.dlycaldt, a.dlyvol, a.shrout
                     from crspq.dsf_v2 as a
-                    where a.dlycaldt >= '01/01/1990'
+                    where a.dlycaldt >= '01/01/1959'
                     """, date_cols=['dlycaldt'])
 crsp.rename(columns={'dlycaldt': 'date', 'dlyvol': 'vol'}, inplace=True)
 

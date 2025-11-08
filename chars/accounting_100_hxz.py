@@ -8,7 +8,7 @@ from functions import *
 ###################
 # Connect to WRDS #
 ###################
-conn = wrds.Connection()
+conn = wrds.Connection(wrds_username='phd22jm', wrds_password='jmwarwickap1998!')
 print(f"Connected to WRDS successfully!")
 #######################################################################################################################
 #                                                    TTM functions                                                    #
@@ -141,7 +141,7 @@ crsp = conn.raw_sql("""
                       a.issuernm, a.issuertype, a.securitytype, a.securitysubtype, a.sharetype, a.usincflg,
                       a.primaryexch, a.conditionaltype, a.TradingStatusFlg
                       from crspq.msf_v2 as a
-                      where a.mthcaldt >= '01/01/1990'
+                      where a.mthcaldt >= '01/01/1959'
                       """, date_cols=['mthcaldt'])
 # rename cusip as cusip_crsp
 crsp.rename(columns={'cusip': 'cusip_crsp'}, inplace=True)
@@ -1346,7 +1346,7 @@ crsp = conn.raw_sql("""
                       a.issuertype, a.securitytype, a.securitysubtype, a.sharetype, a.usincflg,
                       a.primaryexch, a.conditionaltype, a.TradingStatusFlg
                       from crspq.msf_v2 as a
-                      where a.mthcaldt >= '01/01/1990'
+                      where a.mthcaldt >= '01/01/1959'
                       """, date_cols=['mthcaldt'])
 
 # equivalent to legacy code exchcd = 1, 2 or 3
