@@ -21,8 +21,8 @@ print(f"Connected to WRDS successfully!")
 # Merging IBES and CRSP by using ICLINK table. Merging last month price #
 #########################################################################
 
-iclink = pd.read_csv('iclink_ciz.csv')
-iclink.to_feather('../iclink_ciz.feather')
+iclink = pd.read_csv('chars/iclink_ciz.csv')
+iclink.to_feather('iclink_ciz.feather')
 
 with open('iclink_ciz.feather', 'rb')as f:
     iclink = feather.read_feather(f)
