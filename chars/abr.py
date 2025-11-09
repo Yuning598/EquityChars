@@ -67,16 +67,7 @@ print('='*10, 'ccm data is ready', '='*10)
 sql = """
 select distinct
     a.dlycaldt    as dlycaldt,
-    a.dlytotret   as vwretd,
-    a.dlyprcret   as vwretx,
-    b.dlytotret   as ewretd,
-    b.dlyprcret   as ewretx,
-    c.dlyprcret   as sprtrn,
-    c.dlyprcind   as spindx,
-    a.dlytotval   as totval,
-    b.dlytotcnt   as totcnt,
-    a.dlyusdval   as usdval,
-    b.dlyusdcnt   as usdcnt
+    c.dlyprcret   as sprtrn
 from crspq.inddlyseriesdata_ind as a
 left join crspq.inddlyseriesdata_ind as b
     on a.dlycaldt = b.dlycaldt and b.indno = 1000201
@@ -86,7 +77,9 @@ where a.indno = 1000200
   and a.dlycaldt >= '01/01/1959'
 order by a.dlycaldt
 """
-crsp_dsi = conn.raw_sql(sql, date_cols=['dlycaldt'])[['dlycaldt']].drop_duplicates().rename(columns={'dlycaldt': 'date'})
+crsp_data = conn.raw_sql(sql, date_cols=['dlycaldt']).drop_duplicates()
+
+crsp_dsi = crsp_data[['dlycaldt']].rename(columns={'dlycaldt': 'date'})
 
 ccm3 = ccm2.copy()
 for i in range(6):  # we only consider the condition that the day after rdq is not a trading day, which is up to 5 days
@@ -144,8 +137,7 @@ crsp_d = crsp_d.sort_values(by=['date', 'permno', 'meq'])
 
 # sprtrn
 # [Instruction1]:https://wrds-www.wharton.upenn.edu/pages/support/support-articles/crsp/stock-v2-siz/recreating-dsi-and-msi-tables/
-# [Instruction2]:https://wrds-www.wharton.upenn.edu/pages/wrds-research/applications/programming-examples-and-other-topics/sp-500-datasets-and-constituents/
-crspsp500d = conn.raw_sql(sql, date_cols=['dlycaldt'])[['dlycaldt','sprtrn']].drop_duplicates().rename(columns={'dlycaldt': 'date'})
+crspsp500d = crsp_data[['dlycaldt', 'sprtrn']].rename(columns={'dlycaldt': 'date'})
 
 # abnormal return
 crsp_d = pd.merge(crsp_d, crspsp500d, how='left', on='date')
