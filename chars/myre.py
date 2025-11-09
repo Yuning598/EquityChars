@@ -22,6 +22,7 @@ print(f"Connected to WRDS successfully!")
 #########################################################################
 
 iclink = pd.read_csv('chars/iclink_ciz.csv')
+iclink.columns = iclink.columns.str.lower()
 iclink.to_feather('iclink_ciz.feather')
 
 with open('iclink_ciz.feather', 'rb')as f:
