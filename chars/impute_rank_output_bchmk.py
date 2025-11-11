@@ -27,7 +27,10 @@ chars_a['jdate'] = pd.to_datetime(chars_a['jdate'])
 chars_a = chars_a.drop_duplicates(['permno', 'jdate'])
 
 # information list
-obs_var_list = ['gvkey', 'permno', 'jdate', 'ticker', 'conm', 'comnam', 'sic', 'ret', 'retx', 'prc', 'shrout']
+obs_var_list = ['gvkey', 'permno', 'jdate', 
+                'ticker', 'conm', 'comnam', 'sic', 'ret', 'retx', 'prc', 'shrout',
+                'primaryexch', 'conditionaltype', 'tradingstatusflg', 
+                'securitytype', 'securitysubtype','sharetype', 'usincflg', 'issuertype']
 # characteristics with quarterly and annual frequency at the same time
 accounting_var_list = ['datadate', 'acc', 'bm', 'agr', 'alm', 'ato',  'cash', 'cashdebt', 'cfp', 'chcsho',
                        'chtx', 'depr', 'ep', 'gma', 'grltnoa', 'lev', 'lgr', 'ni', 'noa', 'op', 'pctacc', 'pm',
@@ -62,7 +65,10 @@ df_a = df_a.sort_values(obs_var_list)
 df_q = chars_q[obs_var_list + accounting_var_list + q_only_list]
 df_q.columns = obs_var_list + q_var_list + q_only_list
 # drop the same information columns for merging
-df_q = df_q.drop(['sic', 'ret', 'retx', 'ticker', 'conm', 'comnam', 'prc', 'shrout'], axis=1)
+df_q = df_q.drop(['sic', 'ret', 'retx', 'ticker', 'conm', 'comnam', 'prc', 'shrout',
+                  'primaryexch', 'conditionaltype', 'tradingstatusflg', 
+                  'securitytype', 'securitysubtype','sharetype', 'usincflg', 'issuertype'], 
+                  axis=1)
 
 df = df_a.merge(df_q, how='left', on=['gvkey', 'jdate', 'permno'])
 

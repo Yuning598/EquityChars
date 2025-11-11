@@ -828,8 +828,10 @@ def fillna_all(df, method, not_fill_col):
 def standardize(df):
     # exclude the the information columns
     col_names = df.columns.values.tolist()
-    list_to_remove = ['permno', 'date', 'date', 'datadate', 'gvkey', 'sic', 'count', 'exchcd', 'shrcd', 'ffi49', 'ret',
-                      'retadj', 'retx', 'lag_me', 'ticker', 'conm', 'comnam', 'prc', 'shrout']
+    list_to_remove = ['permno', 'date', 'date', 'datadate', 'gvkey', 'sic', 'count',
+                      'primaryexch', 'conditionaltype', 'tradingstatusflg',
+                      'securitytype', 'securitysubtype','sharetype', 'usincflg', 'issuertype',
+                      'ffi49', 'ret', 'retadj', 'retx', 'lag_me', 'ticker', 'conm', 'comnam', 'prc', 'shrout']
     col_names = list(set(col_names).difference(set(list_to_remove)))
     for col_name in tqdm(col_names):
         print('processing %s' % col_name)
