@@ -1,0 +1,64 @@
+name: Update bond explorer data
+
+on:
+  schedule:
+    - cron: "0 8 1 * *"
+  workflow_dispatch:
+    inputs:
+      source_url:
+        description: "Dropbox URL for characteristics_raw.feather"
+        required: true
+        default: "https://www.dropbox.com/scl/fi/fe4kde6pk39hcg6d31ti5/characteristics_raw.feather?rlkey=3bbjf8tjfvbgepz5c2ot4j460&st=sssww9ep&dl=0"
+      release_id:
+        description: "Bond release ID"
+        required: true
+        default: "2024-12"
+
+permissions:
+  contents: write
+
+jobs:
+  build-bond-explorer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install pandas pyarrow
+
+      - name: Build monthly summary
+        run: |
+          python scripts/build_bond_explorer.py \
+            --source "${{ github.event.inputs.source_url || 'https://www.dropbox.com/scl/fi/fe4kde6pk39hcg6d31ti5/characteristics_raw.feather?rlkey=3bbjf8tjfvbgepz5c2ot4j460&st=sssww9ep&dl=0' }}" \
+            --output docs/data/bond_monthly_raw.json \
+            --release-id "${{ github.event.inputs.release_id || '2024-12' }}" \
+            --dataset-label characteristics_raw
+
+      - name: Upload generated explorer data
+        uses: actions/upload-artifact@v4
+        with:
+          name: bond-monthly-raw-json
+          path: docs/data/bond_monthly_raw.json
+
+      - name: Commit generated explorer data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/data/bond_monthly_raw.json
+          if git diff --cached --quiet; then
+            echo "No explorer data changes."
+          else
+            git commit \
+              -m "Refresh bond explorer summary from public release" \
+              -m "The scheduled workflow rebuilds the lightweight monthly JSON from the public Dropbox Feather file so the documentation page stays synchronized with the current release." \
+              -m "Constraint: GitHub Pages should serve precomputed JSON instead of parsing Feather files in the browser" \
+              -m "Confidence: medium" \
+              -m "Scope-risk: narrow" \
+              -m "Tested: scripts/build_bond_explorer.py completed in GitHub Actions" \
+              -m "Not-tested: Visual rendering in GitHub Actions"
+            git push
+          fi

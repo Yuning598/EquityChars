@@ -3,24 +3,24 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Open Asset Characteristics Data</title>
+    <title>US Equity Characteristics Data</title>
     <meta
       name="description"
       content="Replication code and documentation for equity and corporate bond asset characteristics."
     >
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260624g">
   </head>
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <a class="site-title" href="index.html">Open Asset Characteristics Data</a>
+        <a class="site-title" href="index.html">US Equity Characteristics Data</a>
         <p class="site-description">Equity and corporate bond characteristics for asset pricing research</p>
         <nav class="main-nav" aria-label="Primary navigation">
           <a class="active" href="index.html">About</a>
           <a href="data-download.html">Data Download</a>
           <div class="nav-dropdown">
-            <button class="nav-trigger" type="button">Resources</button>
-            <div class="nav-menu" aria-label="Resources submenu">
+            <button class="nav-trigger" type="button">Documentation</button>
+            <div class="nav-menu" aria-label="Documentation submenu">
               <a href="equity.html">Equity</a>
               <a href="corporate-bond.html">Corporate Bond</a>
             </div>
@@ -36,7 +36,7 @@
           <div class="about-main">
             <h2 class="page-heading">About</h2>
             <p>
-              Open Asset Characteristics Data collects replication code,
+              US Equity Characteristics Data collects replication code,
               documentation, and update notes for asset-level characteristics
               used in empirical asset pricing research.
             </p>
@@ -63,27 +63,15 @@
                   <td><a href="data-download.html">Current files</a></td>
                   <td>Four Dropbox parquet files are listed on the data download page.</td>
                 </tr>
+                <tr>
+                  <td><strong>2024-12</strong></td>
+                  <td>Corporate Bond Data</td>
+                  <td><a href="data-download.html">Current files</a></td>
+                  <td>Raw and imputed Feather files are listed on the data download page.</td>
+                </tr>
               </tbody>
             </table>
 
-            <div class="dataset-grid" aria-label="Dataset overview">
-              <article>
-                <p class="dataset-status">Available</p>
-                <p class="dataset-name"><a href="equity.html">Equity Characteristics</a></p>
-                <p>
-                  U.S. firm-level equity characteristics built from WRDS, CRSP
-                  CIZ, Compustat, IBES, and Fama-French data.
-                </p>
-              </article>
-              <article>
-                <p class="dataset-status">Planned</p>
-                <p class="dataset-name"><a href="corporate-bond.html">Corporate Bond Data</a></p>
-                <p>
-                  A future companion dataset for corporate bond characteristics,
-                  documentation, code, and release notes.
-                </p>
-              </article>
-            </div>
             <h3>Long-short portfolio performance</h3>
             <section
               class="explorer about-portfolio"
@@ -163,7 +151,7 @@
     </main>
 
     <footer class="site-footer">
-      <span>© 2026 Open Asset Characteristics Data</span>
+      <span>© 2026 US Equity Characteristics Data</span>
       <a href="https://github.com/Yuning598/EquityChars">GitHub Repository</a>
     </footer>
     <script src="scripts/long-short-explorer.js?v=20260624"></script>

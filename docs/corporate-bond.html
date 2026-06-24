@@ -3,24 +3,24 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Corporate Bond Data | Open Asset Characteristics Data</title>
+    <title>Corporate Bond Documentation | US Equity Characteristics Data</title>
     <meta
       name="description"
-      content="Planned corporate bond data page for Open Asset Characteristics Data."
+      content="Corporate bond characteristics documentation and data construction notes."
     >
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260624g">
   </head>
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <a class="site-title" href="index.html">Open Asset Characteristics Data</a>
+        <a class="site-title" href="index.html">US Equity Characteristics Data</a>
         <p class="site-description">Equity and corporate bond characteristics for asset pricing research</p>
         <nav class="main-nav" aria-label="Primary navigation">
           <a href="index.html">About</a>
           <a href="data-download.html">Data Download</a>
           <div class="nav-dropdown">
-            <button class="nav-trigger active" type="button">Resources</button>
-            <div class="nav-menu" aria-label="Resources submenu">
+            <button class="nav-trigger active" type="button">Documentation</button>
+            <div class="nav-menu" aria-label="Documentation submenu">
               <a href="equity.html">Equity</a>
               <a class="active" href="corporate-bond.html">Corporate Bond</a>
             </div>
@@ -32,39 +32,113 @@
 
     <main class="page">
       <section class="section contact">
-        <h2 class="page-heading">Status</h2>
+        <h2 class="page-heading">Documentation</h2>
         <p>
-          Corporate bond data is planned as a future companion dataset. The page
-          is included now so the site can grow as a multi-asset data portal
-          without changing the top-level navigation.
+          Corporate bond characteristics are constructed from cleaned TRACE
+          transactions, FISD issue information, ratings, bond-equity links, and
+          external macro and fixed-income factor inputs. The public release
+          currently exposes raw and imputed characteristic panels.
         </p>
-        <table class="download-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Description</th>
-              <th>Access</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Bond characteristics</td>
-              <td>Dataset documentation and download links will be added here.</td>
-              <td><span class="muted">Coming later</span></td>
-            </tr>
-            <tr>
-              <td>Bond update log</td>
-              <td>Release notes will be tracked when the dataset is available.</td>
-              <td><span class="muted">Coming later</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <ul class="link-list">
+          <li>
+            <a href="files/bond_characteristics_definitions.pdf">Characteristics definitions</a>
+            <span>PDF documentation.</span>
+          </li>
+          <li>
+            <a href="files/bond_characteristics_calculation.pdf">Calculations</a>
+            <span>metric documentation.</span>
+          </li>
+        </ul>
+
+        <h2 class="page-heading" id="bond-characteristics">Characteristic taxonomy</h2>
+        <figure class="taxonomy-figure" aria-label="Corporate bond characteristic taxonomy">
+          <div class="taxonomy-core">
+            <span>Corporate bond characteristics</span>
+            <strong>54 signals</strong>
+            <small>monthly bond-level panel</small>
+          </div>
+          <div class="taxonomy-grid taxonomy-grid-compact">
+            <section class="taxonomy-family">
+              <h3>Issue terms <span>8</span></h3>
+              <p>Static issue-level attributes from FISD and cleaned bond reference data.</p>
+              <ul class="taxonomy-tags">
+                <li>clean_price</li><li>size</li><li>rating</li><li>ytm</li><li>duration</li><li>benchmark_duration</li><li>age</li><li>time2maturity</li>
+              </ul>
+            </section>
+            <section class="taxonomy-family">
+              <h3>Trading activity <span>18</span></h3>
+              <p>TRACE-based liquidity, turnover, price dispersion, and transaction activity measures.</p>
+              <ul class="taxonomy-tags">
+                <li>Amihud</li><li>std_Amihud</li><li>Roll</li><li>BPW</li><li>TC_IQR</li><li>P_HL</li><li>PI_Roll</li><li>PI_HL</li><li>barQ</li><li>std_barQ_1mom</li><li>Range_daily</li><li>trades</li><li>P_Zeros</li><li>P_FHT</li><li>PI_FHT</li><li>volume</li><li>turnover</li><li>range_monthly</li>
+              </ul>
+            </section>
+            <section class="taxonomy-family">
+              <h3>Return risk <span>13</span></h3>
+              <p>Bond return continuation, reversal, realized risk, downside risk, and tail behavior.</p>
+              <ul class="taxonomy-tags">
+                <li>monthly_return</li><li>monthly_return_winsorized</li><li>variance</li><li>skewness</li><li>kurtosis</li><li>min_daily</li><li>max_daily</li><li>VaR_5%</li><li>VaR_10%</li><li>VaR_5%ES</li><li>VaR_10%ES</li><li>COSKEW</li><li>ISKEW</li>
+              </ul>
+            </section>
+            <section class="taxonomy-family">
+              <h3>Momentum <span>4</span></h3>
+              <p>Return continuation and reversal measures over short and intermediate horizons.</p>
+              <ul class="taxonomy-tags">
+                <li>1-month_mom</li><li>6-month_mom</li><li>12-month_mom</li><li>LTR_mom</li>
+              </ul>
+            </section>
+            <section class="taxonomy-family">
+              <h3>Market exposure <span>11</span></h3>
+              <p>Fixed-income, equity-market, and volatility-factor beta characteristics.</p>
+              <ul class="taxonomy-tags">
+                <li>market_beta</li><li>market_residual_variance</li><li>term_beta</li><li>default_beta</li><li>term_default_residual_variance</li><li>drf_beta</li><li>crf_beta</li><li>lrf_beta</li><li>liq_beta</li><li>vix_beta</li><li>unc_beta</li>
+              </ul>
+            </section>
+          </div>
+        </figure>
+
+        <h2 class="page-heading" id="bond-characteristic-explorer">Characteristic explorer</h2>
+        <section
+          class="explorer"
+          data-characteristic-explorer
+          data-summary-url="data/bond_monthly_raw.json"
+          data-source-label="characteristics_raw.feather"
+        >
+          <div class="explorer-controls">
+            <label>
+              Characteristic
+              <select data-characteristic-select></select>
+            </label>
+            <label>
+              Metric
+              <select data-metric-select>
+                <option value="mean">Mean value</option>
+                <option value="coverage">Coverage</option>
+                <option value="n">Non-missing observations</option>
+              </select>
+            </label>
+            <span class="muted" data-explorer-status>Loading monthly summary...</span>
+          </div>
+          <div class="chart-panel" data-monthly-chart></div>
+          <div class="portfolio-range monthly-range" data-monthly-range hidden>
+            <div class="portfolio-range-labels" data-monthly-range-labels></div>
+            <div class="portfolio-range-track">
+              <canvas data-monthly-range-canvas width="900" height="42" aria-hidden="true"></canvas>
+              <div class="portfolio-range-selection" data-monthly-range-selection></div>
+              <input type="range" min="0" value="0" step="1" aria-label="Explorer start month" data-monthly-range-start>
+              <input type="range" min="0" value="0" step="1" aria-label="Explorer end month" data-monthly-range-end>
+            </div>
+            <p class="portfolio-range-caption" data-monthly-range-caption></p>
+          </div>
+          <p class="chart-caption" data-chart-caption></p>
+        </section>
+
       </section>
     </main>
 
     <footer class="site-footer">
-      <span>© 2026 Open Asset Characteristics Data</span>
+      <span>© 2026 US Equity Characteristics Data</span>
       <a href="https://github.com/Yuning598/EquityChars">GitHub Repository</a>
     </footer>
+    <script src="scripts/equity-explorer.js?v=20260624d"></script>
   </body>
 </html>

@@ -1,5 +1,5 @@
 (async function () {
-  const root = document.querySelector("[data-equity-explorer]");
+  const root = document.querySelector("[data-characteristic-explorer], [data-equity-explorer]");
   if (!root) return;
 
   const status = root.querySelector("[data-explorer-status]");
@@ -16,6 +16,7 @@
   const rangeCaption = root.querySelector("[data-monthly-range-caption]");
 
   const url = root.dataset.summaryUrl;
+  const sourceLabel = root.dataset.sourceLabel || "source data";
   let data;
   try {
     const response = await fetch(url);
@@ -278,7 +279,7 @@
         <rect class="hit-area" x="${margin.left}" y="${margin.top}" width="${innerWidth}" height="${innerHeight}" data-hit-area></rect>
       </svg>
     `;
-    caption.textContent = `${char}: monthly ${metricText.toLowerCase()} from chars_raw_no_impute.parquet. Hover over the line for monthly values.`;
+    caption.textContent = `${char}: monthly ${metricText.toLowerCase()} from ${sourceLabel}. Hover over the line for monthly values.`;
 
     const svg = chart.querySelector("svg");
     const hitArea = chart.querySelector("[data-hit-area]");
@@ -333,5 +334,7 @@
   rangeEnd?.addEventListener("input", draw);
   window.addEventListener("resize", draw);
   if (characteristics.includes("bm")) select.value = "bm";
+  else if (characteristics.includes("ytm")) select.value = "ytm";
+  else if (characteristics.includes("monthly_return")) select.value = "monthly_return";
   draw();
 })();

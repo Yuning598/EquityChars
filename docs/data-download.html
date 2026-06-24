@@ -3,24 +3,24 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Data Download | Open Asset Characteristics Data</title>
+    <title>Data Download | US Equity Characteristics Data</title>
     <meta
       name="description"
-      content="Download monthly data release links for Open Asset Characteristics Data."
+      content="Download monthly data release links for US Equity Characteristics Data."
     >
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260624g">
   </head>
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <a class="site-title" href="index.html">Open Asset Characteristics Data</a>
+        <a class="site-title" href="index.html">US Equity Characteristics Data</a>
         <p class="site-description">Equity and corporate bond characteristics for asset pricing research</p>
         <nav class="main-nav" aria-label="Primary navigation">
           <a href="index.html">About</a>
           <a class="active" href="data-download.html">Data Download</a>
           <div class="nav-dropdown">
-            <button class="nav-trigger" type="button">Resources</button>
-            <div class="nav-menu" aria-label="Resources submenu">
+            <button class="nav-trigger" type="button">Documentation</button>
+            <div class="nav-menu" aria-label="Documentation submenu">
               <a href="equity.html">Equity</a>
               <a href="corporate-bond.html">Corporate Bond</a>
             </div>
@@ -31,79 +31,109 @@
     </header>
 
     <main class="page">
-      <section class="section contact">
-        <p>
-          The repository distributes code and documentation. Large WRDS-derived
-          data files are generated locally by users with the required WRDS
-          subscriptions.
+      <section class="section download-page">
+        <h1 class="page-heading">Data Download</h1>
+        <p class="compact-lede">
+          Current data files are listed by dataset family. Expand a dataset to
+          view the latest release and download links.
         </p>
 
-        <h2 class="page-heading">Monthly data releases</h2>
-        <p>
-          Data files are distributed through stable Dropbox links. The files are
-          replaced when a new monthly release is available, and the update date
-          records the current version on this page.
-        </p>
-        <div class="release-sections">
-          <section class="release-block">
-            <h3>Equity Characteristics</h3>
-            <table class="release-table">
-              <thead>
-                <tr>
-                  <th>Updated</th>
-                  <th>File</th>
-                  <th>Description</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><strong>2026-04</strong></td>
-                  <td><a href="https://www.dropbox.com/scl/fi/3nvq1zj9h7oij4is3nnud/chars_raw_no_impute.parquet?rlkey=2d0e99n8lws3frr4a7hgtq7ns&amp;st=z2wbzjez&amp;dl=0">chars_raw_no_impute.parquet</a></td>
-                  <td>Raw characteristic values without imputation.</td>
-                </tr>
-                <tr>
-                  <td><strong>2026-04</strong></td>
-                  <td><a href="https://www.dropbox.com/scl/fi/zafro1ihrq0b0uxoi656n/chars_raw_imputed.parquet?rlkey=haf5k6xhs1i11qipfwnqsizt2&amp;st=tyt0hs0d&amp;dl=0">chars_raw_imputed.parquet</a></td>
-                  <td>Raw characteristic values after imputation.</td>
-                </tr>
-                <tr>
-                  <td><strong>2026-04</strong></td>
-                  <td><a href="https://www.dropbox.com/scl/fi/a9hw05g3ft54rl57wt9iz/chars_rank_no_impute.parquet?rlkey=apn6llfzss96c8pcb9wxb3mgm&amp;st=ztjbq5xa&amp;dl=0">chars_rank_no_impute.parquet</a></td>
-                  <td>Rank-standardized characteristics without imputation.</td>
-                </tr>
-                <tr>
-                  <td><strong>2026-04</strong></td>
-                  <td><a href="https://www.dropbox.com/scl/fi/zrtuyhge5zwmoprjenlrc/chars_rank_imputed.parquet?rlkey=zk2z0s53gvttqr9ncx6vtzfff&amp;st=e7mkm4ni&amp;dl=0">chars_rank_imputed.parquet</a></td>
-                  <td>Rank-standardized characteristics after imputation.</td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
+        <div class="download-accordion" aria-label="Dataset downloads">
+          <details class="download-panel download-card" open>
+            <summary>
+              <span class="download-icon" aria-hidden="true">EQ</span>
+              <span class="download-summary-text">
+                <strong>Equity Characteristics</strong>
+                <small>U.S. firm-level characteristic panels</small>
+              </span>
+              <span class="download-release">2026-04 release</span>
+            </summary>
+            <div class="download-panel-body">
+              <p>
+                Choose one of the four monthly parquet panels. These Dropbox
+                links are updated in place when a new release is available.
+              </p>
+              <div class="download-form" data-download-picker>
+                <label>
+                  Data file
+                  <select data-download-select>
+                    <option
+                      value="https://www.dropbox.com/scl/fi/3nvq1zj9h7oij4is3nnud/chars_raw_no_impute.parquet?rlkey=2d0e99n8lws3frr4a7hgtq7ns&amp;st=hhi3pyai&amp;dl=0"
+                      data-updated="2026-04"
+                      data-description="Raw characteristic values without imputation."
+                    >chars_raw_no_impute.parquet</option>
+                    <option
+                      value="https://www.dropbox.com/scl/fi/zafro1ihrq0b0uxoi656n/chars_raw_imputed.parquet?rlkey=haf5k6xhs1i11qipfwnqsizt2&amp;st=4jetqw4z&amp;dl=0"
+                      data-updated="2026-04"
+                      data-description="Raw characteristic values after imputation."
+                    >chars_raw_imputed.parquet</option>
+                    <option
+                      value="https://www.dropbox.com/scl/fi/a9hw05g3ft54rl57wt9iz/chars_rank_no_impute.parquet?rlkey=apn6llfzss96c8pcb9wxb3mgm&amp;st=zwym4in9&amp;dl=0"
+                      data-updated="2026-04"
+                      data-description="Rank-standardized characteristics without imputation."
+                    >chars_rank_no_impute.parquet</option>
+                    <option
+                      value="https://www.dropbox.com/scl/fi/zrtuyhge5zwmoprjenlrc/chars_rank_imputed.parquet?rlkey=zk2z0s53gvttqr9ncx6vtzfff&amp;st=9pwnwwad&amp;dl=0"
+                      data-updated="2026-04"
+                      data-description="Rank-standardized characteristics after imputation."
+                    >chars_rank_imputed.parquet</option>
+                  </select>
+                </label>
+                <div class="download-meta">
+                  <span data-download-updated></span>
+                  <p data-download-description></p>
+                </div>
+                <a class="download-button" data-download-link href="#" target="_blank" rel="noopener">Download</a>
+              </div>
+            </div>
+          </details>
 
-          <section class="release-block">
-            <h3>Corporate Bond Data</h3>
-            <table class="release-table">
-              <thead>
-                <tr>
-                  <th>Release ID</th>
-                  <th>Dropbox data</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><span class="muted">Planned</span></td>
-                  <td><span class="muted">Dropbox folder to be added</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
+          <details class="download-panel download-card">
+            <summary>
+              <span class="download-icon" aria-hidden="true">BD</span>
+              <span class="download-summary-text">
+                <strong>Corporate Bond Data</strong>
+                <small>corporate bond characteristic panels</small>
+              </span>
+              <span class="download-release">2024-12 release</span>
+            </summary>
+            <div class="download-panel-body">
+              <p>
+                Choose one of the available corporate bond characteristic
+                files. The repository code for this dataset is not public.
+              </p>
+              <div class="download-form" data-download-picker>
+                <label>
+                  Data file
+                  <select data-download-select>
+                    <option
+                      value="https://www.dropbox.com/scl/fi/fe4kde6pk39hcg6d31ti5/characteristics_raw.feather?rlkey=3bbjf8tjfvbgepz5c2ot4j460&amp;st=sssww9ep&amp;dl=0"
+                      data-updated="2024-12"
+                      data-description="Raw corporate bond characteristic values."
+                    >characteristics_raw.feather</option>
+                    <option
+                      value="https://www.dropbox.com/scl/fi/50eu82rjxbasjtqhnj0k6/characteristics_imputed.feather?rlkey=5hl5urv6ede4wibkbmjqsepuk&amp;st=ac0y5lv2&amp;dl=0"
+                      data-updated="2024-12"
+                      data-description="Corporate bond characteristic values after imputation."
+                    >characteristics_imputed.feather</option>
+                  </select>
+                </label>
+                <div class="download-meta">
+                  <span data-download-updated></span>
+                  <p data-download-description></p>
+                </div>
+                <a class="download-button" data-download-link href="#" target="_blank" rel="noopener">Download</a>
+              </div>
+            </div>
+          </details>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <span>© 2026 Open Asset Characteristics Data</span>
+      <span>© 2026 US Equity Characteristics Data</span>
       <a href="https://github.com/Yuning598/EquityChars">GitHub Repository</a>
     </footer>
+    <script src="scripts/downloads.js?v=20260624e"></script>
   </body>
 </html>
