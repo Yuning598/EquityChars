@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data Update Log | Open Asset Characteristics Data</title>
+    <meta
+      name="description"
+      content="Archive of data update notes for U.S. equity characteristics."
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="site-title" href="index.html">Open Asset Characteristics Data</a>
+        <p class="site-description">Equity and corporate bond characteristics for asset pricing research</p>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="index.html">About</a>
+          <a href="data-download.html">Data Download</a>
+          <div class="nav-dropdown">
+            <button class="nav-trigger" type="button">Resources</button>
+            <div class="nav-menu" aria-label="Resources submenu">
+              <a href="equity.html">Equity</a>
+              <a href="corporate-bond.html">Corporate Bond</a>
+            </div>
+          </div>
+          <a href="contact-us.html">Contact Us</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="section">
+        <h2>CIZ Format Issues</h2>
+        <ul class="log-list">
+          <li>
+            <time datetime="2026-02-07">2026-02-07</time>
+            <p>
+              How to deal with firms with different securities? For example,
+              GOOG/GOOGL and BRK.A/BRK.B.
+            </p>
+          </li>
+          <li>
+            <time datetime="2026-02-07">2026-02-07</time>
+            <p>
+              For the CCM table, we have a different table from JKP. We should
+              also modify the CCM filter following the WRDS official guide.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="section contact">
+        <h2>Archive SIZ Format Update</h2>
+        <ul class="log-list">
+          <li>
+            <time datetime="2025-07-27">2025-07-27</time>
+            <p>Updated <code>BETA</code> in several cases:</p>
+            <ul>
+              <li>
+                Fixed bugs on special issues by changing <code>pass</code> to
+                <code>continue</code> so unsatisfied cases are not included.
+              </li>
+              <li>
+                Changed matrix calculations from <code>np.mat</code> to
+                <code>np.array</code>.
+              </li>
+              <li>Extended market beta to FF5 beta in <code>beta_ff5.py</code>.</li>
+            </ul>
+          </li>
+          <li>
+            <time datetime="2025-04-22">2025-04-22</time>
+            <p>Fixed <code>SUE</code> again:</p>
+            <ul>
+              <li>
+                Switched sorting and cumulative count order to ensure cumulative
+                counts are computed correctly.
+              </li>
+              <li>
+                Used EPS data from the past eight quarters, subtracting values
+                from four quarters prior, then calculating standard deviation.
+              </li>
+              <li>
+                Required at least six non-missing quarterly observations among
+                the prior eight quarters, including the most recent quarter.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <time datetime="2025-04-01">2025-04-01</time>
+            <p>
+              Some <code>EPS</code> values did not change, but Python did not
+              recognize this and assigned a standard deviation of zero, leading
+              to a huge raw number for <code>sue</code>.
+            </p>
+          </li>
+          <li>
+            <time datetime="2025-02-28">2025-02-28</time>
+            <p>
+              Fixed the calculation of <code>acc</code> (Operating Accruals).
+              Following Sloan (1996), HXZ (2020), and GHZ (2017), annual income
+              before extraordinary items (<code>ib</code>) minus operating cash
+              flows (<code>oancf</code>) is divided by average total assets
+              (<code>at</code>). If <code>oancf</code> is missing, it is set to
+              change in <code>act</code> minus change in <code>che</code> minus
+              change in <code>lct</code> plus change in <code>dlc</code> plus
+              change in <code>txp</code> minus <code>dp</code>. Missing changes
+              in income taxes payable are set to zero.
+            </p>
+          </li>
+          <li>
+            <time datetime="2025-02-23">2025-02-23</time>
+            <p>
+              Fixed <code>zerotrade</code> (Number of zero-trading days rolling
+              3m). Following the footnote in Liu (2006), used a deflator of
+              11,000 to construct rolling 3-month <code>zerotrade</code>.
+            </p>
+          </li>
+          <li>
+            <time datetime="2025-02-23">2025-02-23</time>
+            <p>
+              Corrected annual <code>roa</code> by using annual
+              <code>ib</code> and one-year-lagged total assets
+              (<code>at_l1</code>).
+            </p>
+          </li>
+          <li>
+            <time datetime="2025-02-23">2025-02-23</time>
+            <p>Unified several units to one consistent scale:</p>
+            <ul>
+              <li>
+                <code>dolvol = log(vol * prc)</code>: multiply
+                <code>vol</code> by 100 because monthly volume is in hundred
+                shares.
+              </li>
+              <li>
+                <code>turn</code>: multiply <code>vol</code> by 100 and
+                <code>shrout</code> by 1000 because monthly volume is in hundred
+                shares and shares outstanding are in thousands.
+              </li>
+              <li>
+                <code>std_turn</code>: multiply <code>shrout</code> by 1000
+                because daily volume is in shares while shares outstanding are in
+                thousands.
+              </li>
+            </ul>
+          </li>
+          <li>
+            <time datetime="2025-02-23">2025-02-23</time>
+            <p>
+              Corrected the unit of <code>me</code> (size) from thousand to
+              million so it is consistent with accounting variables used in
+              characteristic calculations. Influenced characteristics include
+              <code>bm</code>, <code>me_ia</code>, <code>cfp</code>,
+              <code>ep</code>, <code>rsup</code>, <code>lev</code>,
+              <code>sp</code>, <code>rdm</code>, <code>adm</code>,
+              <code>dy</code>, and <code>alm</code>.
+            </p>
+          </li>
+          <li>
+            <time datetime="2025-02-21">2025-02-21</time>
+            <p>
+              Fixed a denominator issue in <code>ill</code> (illiquidity) by
+              adding brackets around <code>abs(prc) * vol</code>.
+            </p>
+          </li>
+          <li>
+            <time datetime="2024-08-22">2024-08-22</time>
+            <p>
+              Observations before the first annual records are already excluded.
+              This is equivalent to setting <code>cumcount &gt;= 0</code>.
+              Setting <code>cumcount &gt;= 1</code> is the same as the FF3
+              replication code and excludes the first two years of annual
+              records.
+            </p>
+          </li>
+          <li>
+            <time datetime="2024-08-08">2024-08-08</time>
+            <p>
+              In step 3 (<code>merge_chars.py</code>), changed the merge method
+              from <code>outer</code> to <code>left</code> so the
+              <code>permno</code> list remains consistent with accounting-related
+              characteristics and does not generate extra observations.
+            </p>
+          </li>
+          <li>
+            <time datetime="2024-07-10">2024-07-10</time>
+            <p>
+              Added <code>ticker</code> and <code>comnam</code> from CRSP and
+              adjusted <code>fillna_ind</code>, <code>fillna_all</code>, and
+              <code>standardize</code> in <code>functions.py</code> so
+              fundamental stock information does not influence data preparation.
+            </p>
+          </li>
+          <li>
+            <time datetime="2024-06-01">2024-06-01</time>
+            <p>
+              For daily-return characteristics, added the constraint that values
+              are set to missing if <code>volume</code> is empty for more than 40
+              trading days out of 60 days.
+            </p>
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Open Asset Characteristics Data</span>
+      <a href="https://github.com/Yuning598/EquityChars">GitHub Repository</a>
+    </footer>
+  </body>
+</html>

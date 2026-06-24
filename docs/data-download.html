@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Data Download | Open Asset Characteristics Data</title>
+    <meta
+      name="description"
+      content="Download monthly data release links for Open Asset Characteristics Data."
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="site-title" href="index.html">Open Asset Characteristics Data</a>
+        <p class="site-description">Equity and corporate bond characteristics for asset pricing research</p>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <a href="index.html">About</a>
+          <a class="active" href="data-download.html">Data Download</a>
+          <div class="nav-dropdown">
+            <button class="nav-trigger" type="button">Resources</button>
+            <div class="nav-menu" aria-label="Resources submenu">
+              <a href="equity.html">Equity</a>
+              <a href="corporate-bond.html">Corporate Bond</a>
+            </div>
+          </div>
+          <a href="contact-us.html">Contact Us</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="section contact">
+        <p>
+          The repository distributes code and documentation. Large WRDS-derived
+          data files are generated locally by users with the required WRDS
+          subscriptions.
+        </p>
+
+        <h2 class="page-heading">Monthly data releases</h2>
+        <p>
+          Data files are distributed through stable Dropbox links. The files are
+          replaced when a new monthly release is available, and the update date
+          records the current version on this page.
+        </p>
+        <div class="release-sections">
+          <section class="release-block">
+            <h3>Equity Characteristics</h3>
+            <table class="release-table">
+              <thead>
+                <tr>
+                  <th>Updated</th>
+                  <th>File</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>2026-04</strong></td>
+                  <td><a href="https://www.dropbox.com/scl/fi/3nvq1zj9h7oij4is3nnud/chars_raw_no_impute.parquet?rlkey=2d0e99n8lws3frr4a7hgtq7ns&amp;st=z2wbzjez&amp;dl=0">chars_raw_no_impute.parquet</a></td>
+                  <td>Raw characteristic values without imputation.</td>
+                </tr>
+                <tr>
+                  <td><strong>2026-04</strong></td>
+                  <td><a href="https://www.dropbox.com/scl/fi/zafro1ihrq0b0uxoi656n/chars_raw_imputed.parquet?rlkey=haf5k6xhs1i11qipfwnqsizt2&amp;st=tyt0hs0d&amp;dl=0">chars_raw_imputed.parquet</a></td>
+                  <td>Raw characteristic values after imputation.</td>
+                </tr>
+                <tr>
+                  <td><strong>2026-04</strong></td>
+                  <td><a href="https://www.dropbox.com/scl/fi/a9hw05g3ft54rl57wt9iz/chars_rank_no_impute.parquet?rlkey=apn6llfzss96c8pcb9wxb3mgm&amp;st=ztjbq5xa&amp;dl=0">chars_rank_no_impute.parquet</a></td>
+                  <td>Rank-standardized characteristics without imputation.</td>
+                </tr>
+                <tr>
+                  <td><strong>2026-04</strong></td>
+                  <td><a href="https://www.dropbox.com/scl/fi/zrtuyhge5zwmoprjenlrc/chars_rank_imputed.parquet?rlkey=zk2z0s53gvttqr9ncx6vtzfff&amp;st=e7mkm4ni&amp;dl=0">chars_rank_imputed.parquet</a></td>
+                  <td>Rank-standardized characteristics after imputation.</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+
+          <section class="release-block">
+            <h3>Corporate Bond Data</h3>
+            <table class="release-table">
+              <thead>
+                <tr>
+                  <th>Release ID</th>
+                  <th>Dropbox data</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="muted">Planned</span></td>
+                  <td><span class="muted">Dropbox folder to be added</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>© 2026 Open Asset Characteristics Data</span>
+      <a href="https://github.com/Yuning598/EquityChars">GitHub Repository</a>
+    </footer>
+  </body>
+</html>

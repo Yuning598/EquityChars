@@ -13,6 +13,13 @@
 - Extension to [China A Share Market](https://github.com/Quantactix/ChinaAShareEquityCharacteristics)
 - Extension to [Factors and Portfolios in China Market](https://github.com/mlfina/China-A-Sort)
 
+## Academic Background
+
+Empirical asset pricing research often needs firm-level equity characteristics
+and portfolio-level characteristic summaries. This repository provides a Python
+toolkit for constructing U.S. equity characteristics from WRDS inputs, with the
+current implementation centered on the CRSP CIZ data format.
+
 ## Prerequisite
 
 - Read the listed papers
@@ -72,21 +79,26 @@ The four final files (all parquet) are:
 - price / size: `prc`, `shrout`, `me`, `log_me`, `lag_me`
 - return: `ret` (delisting-adjusted via CRSP CIZ `mthret`)
 
-<!-- ## Method
+## Method
 
 ### Equity Characteristics
 
-This topic is summaried by **Green Hand Zhang** and **Hou Xue Zhang**.
+The equity-characteristic definitions follow the empirical anomaly and
+replication literature, especially Green, Hand, and Zhang and Hou, Xue, and
+Zhang. The current implementation documents 99 U.S. equity characteristics in
+`documents/chars_summary.csv` and provides audited formula notes under
+`documents/formula_docs/`.
 
 ### Portfolio Characteristics
 
-Portfolio charactaristics is the equal-weighted / value-weighted averge of the characteristics for all equities in the portfolio.
+Portfolio characteristics can be constructed as equal-weighted or value-weighted
+averages of firm-level characteristics for equities in each portfolio.
 
-The portfolios includes and not limited to:
+Common portfolio applications include:
 
 - Characteristics-sorted Portfolio, see the listed papers and also [Deep Learning in Characteristics-Sorted Factor Models](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3243683)
 - DGTW Benchmark, see [DGTW 1997 JF](https://doi.org/10.1111/j.1540-6261.1997.tb02724.x)
-- Industry portfolio -->
+- Industry portfolio
 
 ## Reference
 
@@ -98,12 +110,12 @@ The portfolios includes and not limited to:
 
 - **The Characteristics that Provide Independent Information about Average U.S. Monthly Stock Returns** by [Green Hand Zhang 2017 RFS](https://doi.org/10.1093/rfs/hhx019)
   - [sas code from Green's website](https://drive.google.com/file/d/0BwwEXkCgXEdRQWZreUpKOHBXOUU/view)
-- **Replicating Anormalies** by [Hou Xue Zhang 2018 RFS](https://doi.org/10.1093/rfs/hhy131)
-  - [Anormaly Portfolios by Zhang's website](http://global-q.org/index.html)
+- **Replicating Anomalies** by [Hou Xue Zhang 2018 RFS](https://doi.org/10.1093/rfs/hhy131)
+  - [Anomaly Portfolios by Zhang's website](http://global-q.org/index.html)
 
 ### Codes
 
-- Calculate equity characteristics with SAS code, mainly refering to [SAS code by Green Hand Zhang](https://drive.google.com/file/d/0BwwEXkCgXEdRQWZreUpKOHBXOUU/view).
-- Portfolio characteristics, mainly refering to [WRDS Financial Ratios Suite](https://wrds-www.wharton.upenn.edu/pages/support/research-wrds/sample-programs/wrds-sample-programs/wrds-financial-ratios-suite/) and [Variable Definition](https://wrds-www.wharton.upenn.edu/documents/793/WRDS_Industry_Financial_Ratio_Manual.pdf)
+- Legacy SAS calculations mainly refer to [SAS code by Green Hand Zhang](https://drive.google.com/file/d/0BwwEXkCgXEdRQWZreUpKOHBXOUU/view).
+- Portfolio characteristics mainly refer to [WRDS Financial Ratios Suite](https://wrds-www.wharton.upenn.edu/pages/support/research-wrds/sample-programs/wrds-sample-programs/wrds-financial-ratios-suite/) and [Variable Definition](https://wrds-www.wharton.upenn.edu/documents/793/WRDS_Industry_Financial_Ratio_Manual.pdf)
 
 **All comments are welcome.**

@@ -1,0 +1,51 @@
+name: Update equity documentation PDFs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y texlive-latex-base texlive-latex-extra texlive-fonts-recommended
+      - name: Build characteristics definitions PDF
+        run: python scripts/build_characteristics_definitions_pdf.py
+      - name: Build calculation formulas PDF
+        run: |
+          pdflatex -interaction=nonstopmode -halt-on-error equity_characteristics_calculation.tex
+          pdflatex -interaction=nonstopmode -halt-on-error equity_characteristics_calculation.tex
+          cp equity_characteristics_calculation.pdf ../../docs/files/equity_characteristics_calculation.pdf
+        working-directory: documents/formula_docs
+      - name: Commit documentation PDFs
+        run: |
+          if git diff --quiet -- docs/files/equity_characteristics_definitions.pdf docs/files/equity_characteristics_calculation.pdf; then
+            echo "No documentation PDF changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/files/equity_characteristics_definitions.pdf docs/files/equity_characteristics_calculation.pdf
+          git commit -F - <<'EOF'
+          Refresh equity documentation PDFs from source documents
+
+          The website serves static PDFs for characteristic definitions and calculation
+          formulas. Regenerating them in CI keeps the downloadable artifacts synchronized
+          with the CSV and LaTeX sources committed to the repository.
+
+          Constraint: GitHub Pages serves static files from docs/files
+          Confidence: medium
+          Scope-risk: narrow
+          Directive: Do not commit LaTeX auxiliary logs as website artifacts
+          Tested: Workflow PDF build completed in GitHub Actions
+          Not-tested: Manual PDF typography review
+          EOF
