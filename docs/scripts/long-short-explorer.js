@@ -88,6 +88,23 @@
     };
   }
 
+  function rowsWithWindowWealth(rows) {
+    let wealth = 1;
+    return rows.map((row, index) => {
+      if (index > 0) {
+        const monthlyReturn = Number(row.long_short);
+        if (Number.isFinite(monthlyReturn)) {
+          wealth *= 1 + monthlyReturn;
+        }
+      }
+      return {
+        ...row,
+        window_wealth: wealth,
+        window_cum_long_short: wealth - 1,
+      };
+    });
+  }
+
   function niceTicks(minValue, maxValue, count = 5) {
     if (!Number.isFinite(minValue) || !Number.isFinite(maxValue)) return [];
     if (minValue === maxValue) return [minValue];
@@ -197,11 +214,12 @@
     const selectedSeries = series[char] || {};
     const allRows = (selectedSeries[weight] || []).filter((row) => row.cum_long_short != null);
     const [startIndex, endIndex] = currentRangeIndexes(allRows, char, weight);
-    const rows = allRows.slice(startIndex, endIndex + 1);
+    const rawRows = allRows.slice(startIndex, endIndex + 1);
+    const rows = rowsWithWindowWealth(rawRows);
     drawRangeOverview(allRows, startIndex, endIndex);
     const startYear = rows[0]?.date.slice(0, 4);
     const endYear = rows[rows.length - 1]?.date.slice(0, 4);
-    const stats = summarizeRows(rows);
+    const stats = summarizeRows(rawRows);
     const longLeg = selectedSeries.long_leg || "High";
     const shortLeg = selectedSeries.short_leg || "Low";
     const scale = scaleSelect?.value || "log";
@@ -225,7 +243,7 @@
     const margin = { top: 54, right: 28, bottom: 54, left: 76 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
-    const chartValue = (row) => (scale === "log" ? Math.log1p(Number(row.cum_long_short)) : Number(row.cum_long_short));
+    const chartValue = (row) => (scale === "log" ? Math.log(Number(row.window_wealth)) : Number(row.window_cum_long_short));
     const values = rows.map(chartValue).filter((value) => Number.isFinite(value));
     let minValue = Math.min(...values, 0);
     let maxValue = Math.max(...values, 0);
@@ -243,9 +261,9 @@
 
     const points = rows.map((row, index) => ({
       date: row.date,
-      value: Number(row.cum_long_short),
+      value: Number(row.window_cum_long_short),
       monthly: Number(row.long_short),
-      wealth: Number(row.cum_long_short) + 1,
+      wealth: Number(row.window_wealth),
       sx: x(index),
       sy: y(chartValue(row)),
     }));
@@ -302,7 +320,7 @@
         <rect class="hit-area" x="${margin.left}" y="${margin.top}" width="${innerWidth}" height="${innerHeight}" data-hit-area></rect>
       </svg>
     `;
-    caption.textContent = `${char}: direction-adjusted monthly long-short decile portfolio (${longLeg} minus ${shortLeg}) from ${data.metadata.dataset}. ${scale === "log" ? "Vertical axis uses wealth multiples on a log scale." : "Vertical axis uses cumulative return."} Hover over the line for date-level returns.`;
+    caption.textContent = `${char}: direction-adjusted monthly long-short decile portfolio (${longLeg} minus ${shortLeg}) from ${data.metadata.dataset}. The selected window is rebased to 1 at the start date. ${scale === "log" ? "Vertical axis uses wealth multiples on a log scale." : "Vertical axis uses cumulative return."} Hover over the line for date-level returns.`;
 
     const svg = chart.querySelector("svg");
     const hitArea = chart.querySelector("[data-hit-area]");
