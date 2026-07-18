@@ -1,0 +1,67 @@
+name: Sync Quantactix export branch
+
+on:
+  push:
+    branches:
+      - website
+    paths:
+      - "chars/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-quantactix-export
+  cancel-in-progress: false
+
+jobs:
+  sync-export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website branch
+        uses: actions/checkout@v4
+        with:
+          ref: website
+          fetch-depth: 0
+
+      - name: Sync chars to quantactix branch
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin quantactix
+
+          export_dir="$(mktemp -d)"
+          git worktree add "$export_dir" origin/quantactix
+
+          (
+            cd "$export_dir"
+            find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          )
+
+          cp -R chars "$export_dir/chars"
+
+          (
+            cd "$export_dir"
+            git add -A
+
+            if git diff --cached --quiet; then
+              echo "No changes to sync into quantactix."
+              exit 0
+            fi
+
+            git commit \
+              -m "Sync Quantactix export from website chars" \
+              -m "The quantactix branch is the reviewable static export that mirrors the website branch's chars/ subsite. This automation updates only that export surface so it can be manually reviewed before importing into JingyuHe/quantactix." \
+              -m "Constraint: Quantactix branch must not carry website workflows, scripts, or source documents" \
+              -m "Confidence: high" \
+              -m "Scope-risk: narrow" \
+              -m "Directive: Keep this sync scoped to chars/ unless the import contract changes" \
+              -m "Tested: GitHub Actions sync command completed" \
+              -m "Not-tested: JingyuHe/quantactix production deploy"
+
+            git push origin HEAD:quantactix
+          )
