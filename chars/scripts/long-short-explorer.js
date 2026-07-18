@@ -26,7 +26,7 @@
     status.textContent = "Long-short portfolio summary is not available yet.";
     chart.innerHTML = "";
     summary.innerHTML = "";
-    caption.textContent = "Run scripts/build_long_short_portfolios.py to generate the portfolio JSON.";
+    caption.textContent = "The static portfolio JSON file is missing from this website branch.";
     return;
   }
 
