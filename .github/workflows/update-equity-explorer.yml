@@ -1,0 +1,57 @@
+name: Update equity explorer summary
+
+on:
+  workflow_dispatch:
+    inputs:
+      parquet_url:
+        description: Dropbox URL for chars_raw_no_impute.parquet
+        required: true
+        default: "https://www.dropbox.com/scl/fi/3nvq1zj9h7oij4is3nnud/chars_raw_no_impute.parquet?rlkey=2d0e99n8lws3frr4a7hgtq7ns&st=z2wbzjez&dl=0"
+      release_id:
+        description: Data release shown on the site
+        required: true
+        default: "2026-04"
+
+permissions:
+  contents: write
+
+jobs:
+  build-summary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: python -m pip install pandas pyarrow
+      - name: Build monthly characteristic summary
+        run: |
+          python scripts/build_equity_explorer.py \
+            --source "${{ inputs.parquet_url }}" \
+            --release-id "${{ inputs.release_id }}" \
+            --dataset-label chars_raw_no_impute \
+            --output chars/data/equity_monthly_raw_no_impute.json
+      - name: Commit summary
+        run: |
+          if git diff --quiet -- chars/data/equity_monthly_raw_no_impute.json; then
+            echo "No equity explorer summary changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add chars/data/equity_monthly_raw_no_impute.json
+          git commit -F - <<'EOF'
+          Refresh equity explorer summary for the selected release
+
+          The website uses a compact JSON summary for browser-side characteristic charts.
+          This workflow rebuilds that summary from the supplied raw no-imputation parquet
+          release without committing the large WRDS-derived source data.
+
+          Constraint: Large parquet source files are referenced by workflow input URL, not stored in git
+          Confidence: medium
+          Scope-risk: narrow
+          Directive: Keep the explorer JSON compact enough for GitHub Pages
+          Tested: Workflow command completed in GitHub Actions
+          Not-tested: Local visual inspection of every characteristic chart
+          EOF

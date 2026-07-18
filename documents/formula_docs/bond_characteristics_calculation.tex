@@ -1,0 +1,107 @@
+\documentclass[11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{pdflscape}
+\usepackage{palatino}
+\usepackage[hyperindex,breaklinks]{hyperref}
+
+\geometry{a4paper, margin=0.85in}
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+\setlength{\parindent}{0pt}
+\renewcommand{\arraystretch}{1.18}
+
+\title{\Large\bfseries Corporate Bond Characteristics Calculation Documentation}
+\author{US Equity Characteristics Data}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document records the public-release metric definitions for the corporate
+bond characteristic panel. The current GitHub repository does not contain the
+private corporate bond construction code, so this document is schema-checked
+against \texttt{characteristics\_raw.feather} and describes the released
+variables rather than an audited source-code formula trace.
+\end{abstract}
+
+\section{Notation}
+Bond is indexed by \(i\) and calendar month by \(t\). Measures are computed
+from the cleaned monthly corporate bond panel unless stated otherwise.
+
+\begin{landscape}
+\small
+\begin{longtable}{p{0.17\linewidth}p{0.62\linewidth}p{0.15\linewidth}}
+\caption{Corporate Bond Characteristics Metric Table}\label{tab:bond-formula-table}\\
+\toprule
+Characteristic & Metric definition & Category\\
+\midrule
+\endfirsthead
+\toprule
+Characteristic & Metric definition & Category\\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+clean\_price & Clean bond price used in monthly aggregation. & Issue terms \\
+size & Release-level issue size variable. & Issue terms \\
+rating & Merged rating value after rating data processing. & Issue terms \\
+ytm & Monthly bond yield-to-maturity measure. & Issue terms \\
+duration & Monthly bond duration measure. & Issue terms \\
+benchmark\_duration & Duration of the matched benchmark Treasury or fixed-income benchmark. & Issue terms \\
+age & Elapsed time since issuance or first valid record. & Issue terms \\
+time2maturity & Time from the monthly observation date to maturity. & Issue terms \\
+Amihud & Absolute return scaled by trading activity. & Trading activity \\
+std\_Amihud & Standardized version of Amihud across the bond panel. & Trading activity \\
+Roll & Roll spread estimate from serial covariance in price changes. & Trading activity \\
+BPW & TRACE price dispersion or width-based liquidity metric. & Trading activity \\
+TC\_IQR & Interquartile range of transaction-cost estimates. & Trading activity \\
+P\_HL & Monthly high-low price range liquidity proxy. & Trading activity \\
+PI\_Roll & Price-impact variant based on the Roll spread estimator. & Trading activity \\
+PI\_HL & Price-impact variant based on high-low price information. & Trading activity \\
+barQ & Monthly average quote/quantity metric from TRACE records. & Trading activity \\
+std\_barQ\_1mom & Standardized one-month change in barQ. & Trading activity \\
+Range\_daily & Within-month daily price range summary. & Trading activity \\
+trades & Monthly count of valid TRACE transactions. & Trading activity \\
+P\_Zeros & Fraction or probability proxy for zero trading activity. & Trading activity \\
+P\_FHT & Fong-Holden-Trzcinka style liquidity estimate. & Trading activity \\
+PI\_FHT & Price-impact variant of the FHT liquidity estimate. & Trading activity \\
+volume & Monthly valid TRACE trading volume. & Trading activity \\
+turnover & Trading volume scaled by size or amount outstanding. & Trading activity \\
+range\_monthly & Monthly high-low or range-based price variation. & Trading activity \\
+monthly\_return & Cleaned monthly bond return. & Return risk \\
+monthly\_return\_winsorized & Monthly bond return after winsorization. & Return risk \\
+variance & Within-window variance of bond returns. & Return risk \\
+skewness & Within-window skewness of bond returns. & Return risk \\
+kurtosis & Within-window kurtosis of bond returns. & Return risk \\
+min\_daily & Worst valid daily return within the month. & Return risk \\
+max\_daily & Best valid daily return within the month. & Return risk \\
+VaR\_5\% & Lower-tail five percent value-at-risk estimate. & Return risk \\
+VaR\_10\% & Lower-tail ten percent value-at-risk estimate. & Return risk \\
+VaR\_5\%ES & Average loss conditional on the five percent lower tail. & Return risk \\
+VaR\_10\%ES & Average loss conditional on the ten percent lower tail. & Return risk \\
+COSKEW & Coskewness with the market or benchmark factor. & Return risk \\
+ISKEW & Skewness of residual or idiosyncratic bond returns. & Return risk \\
+1-month\_mom & Lagged one-month bond return signal. & Momentum \\
+6-month\_mom & Intermediate-horizon lagged bond return signal. & Momentum \\
+12-month\_mom & Longer-horizon lagged bond return signal. & Momentum \\
+LTR\_mom & Long-term return continuation/reversal signal. & Momentum \\
+market\_beta & Bond return beta to the market factor. & Market exposure \\
+market\_residual\_variance & Residual variance from the market factor model. & Market exposure \\
+term\_beta & Bond return beta to the term factor. & Market exposure \\
+default\_beta & Bond return beta to the default factor. & Market exposure \\
+term\_default\_residual\_variance & Residual variance from the term/default factor model. & Market exposure \\
+drf\_beta & Bond return beta to the DRF factor. & Market exposure \\
+crf\_beta & Bond return beta to the CRF factor. & Market exposure \\
+lrf\_beta & Bond return beta to the LRF factor. & Market exposure \\
+liq\_beta & Bond return beta to the liquidity factor. & Market exposure \\
+vix\_beta & Bond return beta to volatility innovations. & Market exposure \\
+unc\_beta & Bond return beta to macro uncertainty innovations. & Market exposure \\
+\end{longtable}
+\end{landscape}
+
+\end{document}
