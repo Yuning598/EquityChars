@@ -1178,7 +1178,7 @@ li + li {
 .site-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 1rem;
   max-width: var(--max-width);
   margin: 0 auto;
@@ -1187,6 +1187,7 @@ li + li {
   background: #fff;
   color: var(--muted);
   font-size: 0.9rem;
+  text-align: center;
 }
 
 @media (max-width: 860px) {
