@@ -1,0 +1,14 @@
+source_field	field_role	rationale_zh	rationale_en	core_signal
+clean_price	价格输入	用于收益计算与数据质量检查，不是 Table A1 的独立特征。	Price input for return calculation and data-quality checks; not a standalone Table A1 characteristic.	no
+monthly_return	实现收益	债券月度总收益，是被解释变量或组合收益输入。	Monthly total bond return; an outcome or portfolio-return input.	no
+monthly_return_winsorized	实现收益	缩尾后的债券月度收益，是稳健性处理后的被解释变量。	Winsorized monthly bond return; a robustness-transformed outcome.	no
+min_daily	诊断统计	月内最小日收益；Table A1 未将其列作独立输入。	Minimum daily return in the month; not listed as a standalone Table A1 input.	no
+max_daily	诊断统计	月内最大日收益；Table A1 未将其列作独立输入。	Maximum daily return in the month; not listed as a standalone Table A1 input.	no
+PI_Roll	候选流动性变体	Roll 指标的价格冲击变体；当前未在 Table A1 中逐项确认。	Price-impact variant of Roll liquidity; not separately identified in Table A1.	no
+PI_HL	候选流动性变体	高低价指标的价格冲击变体；当前未在 Table A1 中逐项确认。	Price-impact variant of the high–low measure; not separately identified in Table A1.	no
+P_Zeros	候选流动性变体	零交易或零收益概率指标；当前未在 Table A1 中逐项确认。	Zero-trading or zero-return probability measure; not separately identified in Table A1.	no
+PI_FHT	候选流动性变体	FHT 指标的价格冲击变体；Table A1 对应的是 P_FHT。	Price-impact variant of FHT liquidity; Table A1 maps to P_FHT instead.	no
+VaR_5%ES	候选尾部风险变体	5% 预期损失；Table A1 仅列出 5% VaR。	Five-percent expected shortfall; Table A1 lists 5% VaR, not ES.	no
+VaR_10%ES	候选尾部风险变体	10% 预期损失；Table A1 仅列出 10% VaR。	Ten-percent expected shortfall; Table A1 lists 10% VaR, not ES.	no
+benchmark_duration	基准匹配输入	用于持续期匹配基准或诊断，不是 Table A1 的独立特征。	Benchmark-matching input or diagnostic; not a standalone Table A1 characteristic.	no
+volume	交易量输入	总交易量可能进入换手率与流动性度量，但 Table A1 使用 barQ、trades 与 TURN 等成品特征。	Trading-volume input that may enter turnover or liquidity measures; Table A1 uses derived variables such as barQ, trades, and TURN.	no

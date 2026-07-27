@@ -1,0 +1,18 @@
+# Netlify / Cloudflare Pages compatible cache policy.
+# HTML is revalidated so route and language changes are released promptly.
+/*.html
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache
+
+# Static application assets may be reused while the browser checks for updates.
+/*.js
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+/*.css
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+# Local research papers are versioned source files and may be kept longer.
+/papers/*
+  Cache-Control: public, max-age=604800, immutable

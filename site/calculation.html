@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="EquityChars 公司特征度量、CRSP/Compustat 数据字段、度量窗口与文献定义对照。"
+    >
+    <title>特征度量与实现口径 · Signal Atlas</title>
+    <link rel="stylesheet" href="styles.css">    <script>
+      window.MathJax = {
+        svg: {
+          fontCache: "global"
+        }
+      };
+    </script>
+    <script defer src="navigation.js"></script>
+    <script defer src="data.js"></script>
+    <script defer src="calculation.js"></script>
+  </head>
+  <body class="calculation-page">
+    <a class="skip-link" href="#calculationResults" data-i18n="skip">跳到特征定义</a>
+
+    <header class="calculation-header">
+      <nav class="topbar asset-topbar" aria-label="主导航">
+        <a class="brand" href="./" aria-label="Signal Atlas 首页">
+          <span class="brand-mark" aria-hidden="true">EC</span>
+          <span>
+            <strong>Signal Atlas</strong>
+            <small>EquityChars literature audit</small>
+          </span>
+        </a>
+        <div class="asset-switch" aria-label="资产类别">
+          <a class="active" href="index.html">Equity</a>
+          <a href="bond.html">Bond</a>
+        </div>
+        <div class="topbar-actions">
+                    <div class="module-nav" aria-label="页面模块">
+            <a class="ghost-button" href="index.html" data-equity-nav="directory">
+            <span data-i18n="directoryNav">Directory</span>
+          </a>
+          <a class="ghost-button" href="equity-portfolio-construction.html" data-equity-nav="methods">
+            <span data-i18n="longShortNav">Portfolio formation</span>
+          </a>
+          <a class="ghost-button" href="calculation.html" data-equity-nav="measures" aria-current="page">
+            <span data-i18n="measuresNav">Characteristic measures</span>
+          </a>
+          <a class="ghost-button" href="equity-classification-criteria.html" data-equity-nav="criteria">
+            <span data-i18n="criteriaNav">Classification criteria</span>
+          </a>
+
+          </div>
+          <button class="language-button" id="languageToggle" type="button" aria-label="Switch language">
+            EN
+          </button>
+        </div>
+      </nav>
+
+      <div class="calculation-intro page-banner">
+        <div>
+          <p class="eyebrow">MEASUREMENT CROSSWALK</p>
+          <h1 data-i18n="title">特征度量与实现口径</h1>
+        </div>
+        <p data-i18n="lede">左栏列示 chars_ciz 的项目实现，右栏列示原始文献及相关文献中的度量定义。</p>
+      </div>
+    </header>
+
+    <main class="calculation-workspace">
+      <div class="calculation-toolbar">
+        <label class="search-box" for="calculationSearch">
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <path d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/>
+          </svg>
+          <input
+            id="calculationSearch"
+            type="search"
+            placeholder="搜索公司特征、度量公式或数据字段…"
+            data-i18n-placeholder="searchPlaceholder"
+            autocomplete="off"
+          >
+        </label>
+        <p class="result-meta" id="calculationMeta"></p>
+      </div>
+
+      <div class="calculation-results" id="calculationResults"></div>
+      <nav
+        class="pagination"
+        id="calculationPagination"
+        aria-label="特征定义分页"
+        hidden
+      ></nav>
+      <div class="empty-state" id="calculationEmpty" hidden>
+        <h2 data-i18n="emptyTitle">无匹配的特征定义</h2>
+        <p data-i18n="emptyCopy">请调整特征标识、度量公式或字段名称。</p>
+      </div>
+    </main>
+
+    <footer>
+      <p data-i18n="footer">
+        项目公式来自 chars_ciz 实现；文献公式用于核对度量定义，不表示二者完全一致。
+      </p>
+    </footer>
+  </body>
+</html>

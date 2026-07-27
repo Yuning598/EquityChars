@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="EquityChars 公司特征排序、组合构造与可核验文献证据。"
+    >
+    <title>公司特征组合 · Signal Atlas</title>
+    <link rel="stylesheet" href="styles.css">    <script defer src="config.js"></script>
+    <script defer src="navigation.js"></script>
+    <script defer src="data-index.js"></script>
+    <script defer src="equity-i18n.js"></script>
+    <script defer src="equity-url-state.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#results" data-i18n="skip">跳到特征目录</a>
+
+    <header class="hero page-banner">
+      <nav class="topbar asset-topbar" aria-label="主导航">
+        <a class="brand" href="./" aria-label="Signal Atlas 首页">
+          <span class="brand-mark" aria-hidden="true">EC</span>
+          <span>
+            <strong>Signal Atlas</strong>
+            <small>EquityChars literature audit</small>
+          </span>
+        </a>
+        <div class="asset-switch" aria-label="资产类别">
+          <a class="active" href="index.html" aria-current="page">Equity</a>
+          <a href="bond.html">Bond</a>
+        </div>
+        <div class="topbar-actions">
+                    <div class="module-nav" aria-label="页面模块">
+            <a class="ghost-button" href="index.html" data-equity-nav="directory" aria-current="page">
+            <span data-i18n="directoryNav">Directory</span>
+          </a>
+          <a class="ghost-button" href="equity-portfolio-construction.html" data-equity-nav="methods">
+            <span data-i18n="portfolioMethodsNav">Portfolio construction</span>
+          </a>
+          <a class="ghost-button" href="calculation.html" data-equity-nav="measures">
+            <span data-i18n="calculationNav">特征度量</span>
+          </a>
+          <a class="ghost-button" id="methodButton" href="equity-classification-criteria.html" data-equity-nav="criteria">
+            <span data-i18n="method">判定准则</span>
+          </a>
+          </div>
+          <button class="language-button" id="languageToggle" type="button" aria-label="Switch language">
+            EN
+          </button>
+        </div>
+      </nav>
+
+      <div class="hero-copy">
+        <p class="eyebrow" data-i18n="eyebrow">CHARACTERISTIC PORTFOLIO EVIDENCE</p>
+        <h1><span class="hero-line" data-i18n="heroTitle">特征排序与多空组合</span></h1>
+        <p class="hero-lede" data-i18n="heroLede">
+          核验 H−L / L−H 多空方向、组合构造、项目实现口径与原始文献证据。
+        </p>
+      </div>
+
+      <section class="summary-grid" aria-label="审计摘要">
+        <article class="summary-card">
+          <span data-i18n="metricMappings">公司特征</span>
+          <strong id="totalCount">—</strong>
+          <small data-i18n="fullAuditScope">纳入审计样本</small>
+        </article>
+        <article class="summary-card accent-green">
+          <span data-i18n="explicitHL">H−L 组合</span>
+          <strong id="highLowCount">—</strong>
+          <small data-i18n="highLongLowShort">多头：高特征值 · 空头：低特征值</small>
+        </article>
+        <article class="summary-card accent-blue">
+          <span data-i18n="explicitLH">L−H 组合</span>
+          <strong id="lowHighCount">—</strong>
+          <small data-i18n="lowLongHighShort">多头：低特征值 · 空头：高特征值</small>
+        </article>
+        <article class="summary-card accent-amber">
+          <span data-i18n="localPdf">本地存档 PDF</span>
+          <strong id="pdfCount">—</strong>
+          <small data-i18n="indicatorCoverage">可查阅本地原文</small>
+        </article>
+      </section>
+    </header>
+
+    <main>
+      <section class="study-guide" aria-labelledby="equityStudyGuideTitle">
+        <div class="study-guide-heading">
+          <p class="section-kicker">START HERE</p>
+          <h2 id="equityStudyGuideTitle"><span class="lang-zh">建议学习路径</span><span class="lang-en">A practical study path</span></h2>
+          <p><span class="lang-zh">先确认研究对象与组合口径，再进入特征与原文。每一步只回答一个问题。</span><span class="lang-en">Establish the return object and portfolio convention first; then move to characteristics and the original source. Each step answers one question.</span></p>
+        </div>
+        <ol class="study-guide-steps">
+          <li><span>01</span><div><strong><span class="lang-zh">先看组合构造</span><span class="lang-en">Start with portfolio construction</span></strong><p><span class="lang-zh">明确排序变量、分组断点、权重与持有期。</span><span class="lang-en">Identify the sorting variable, breakpoint, weighting rule, and holding horizon.</span></p><a data-equity-route="methods" href="equity-portfolio-construction.html"><span class="lang-zh">查看构造 →</span><span class="lang-en">Open construction →</span></a></div></li>
+          <li><span>02</span><div><strong><span class="lang-zh">再选一个特征</span><span class="lang-en">Then choose one characteristic</span></strong><p><span class="lang-zh">从目录进入，先读经济含义与多空方向。</span><span class="lang-en">Use the directory; read economic meaning and long-short direction first.</span></p><a data-equity-route="directory" href="index.html"><span class="lang-zh">浏览目录 →</span><span class="lang-en">Browse directory →</span></a></div></li>
+          <li><span>03</span><div><strong><span class="lang-zh">最后核验原文</span><span class="lang-en">Finally verify the source</span></strong><p><span class="lang-zh">回到文献中的定位句与 PDF 页码，而不只依据二手概括。</span><span class="lang-en">Return to the locating passage and PDF page rather than relying on a secondary summary.</span></p><a data-equity-route="criteria" href="equity-classification-criteria.html"><span class="lang-zh">查看判定准则 →</span><span class="lang-en">Open criteria →</span></a></div></li>
+        </ol>
+        <details class="study-glossary">
+          <summary><span class="lang-zh">四个先要读懂的术语</span><span class="lang-en">Four terms to understand first</span></summary>
+          <dl>
+            <div><dt>Excess return</dt><dd><span class="lang-zh">资产总收益扣除文献指定的无风险基准后的收益。</span><span class="lang-en">Total return net of the risk-free benchmark specified by the study.</span></dd></div>
+            <div><dt>Formation period</dt><dd><span class="lang-zh">用于测量特征或历史收益、据以形成组合的观察窗口。</span><span class="lang-en">The observation window used to measure a characteristic or past return before forming portfolios.</span></dd></div>
+            <div><dt>Breakpoint</dt><dd><span class="lang-zh">将横截面样本划分为组别的规则，例如中位数或分位数组。</span><span class="lang-en">The rule that partitions the cross section, such as a median or quantile cutoff.</span></dd></div>
+            <div><dt>Weighting / holding horizon</dt><dd><span class="lang-zh">组合内资产权重，以及形成后收益被计算的期限。</span><span class="lang-en">Asset weights within the portfolio and the period over which post-formation returns are measured.</span></dd></div>
+          </dl>
+        </details>
+      </section>
+      <section class="workspace" aria-labelledby="workspaceTitle">
+        <div class="workspace-heading">
+          <div>
+            <p class="section-kicker" data-i18n="directoryKicker">CHARACTERISTIC DIRECTORY</p>
+            <h2 id="workspaceTitle" data-i18n="directoryTitle">公司特征目录</h2>
+          </div>
+          <p class="result-meta" id="resultMeta"></p>
+        </div>
+
+        <div class="controls" aria-label="筛选公司特征">
+          <label class="search-box" for="searchInput">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/>
+            </svg>
+            <input
+              id="searchInput"
+              type="search"
+              placeholder="搜索公司特征、文献、作者或组合构造规则…"
+              data-i18n-placeholder="searchPlaceholder"
+              autocomplete="off"
+            >
+            <kbd>/</kbd>
+          </label>
+
+          <details class="advanced-filters" id="advancedFilters" open>
+            <summary>
+              <span data-i18n="advancedFilters">更多筛选</span>
+              <span class="active-filter-count" id="activeFilterCount" hidden></span>
+            </summary>
+            <div class="select-group">
+            <label>
+              <span data-i18n="paperDirection">多空方向</span>
+              <select id="directionFilter">
+                <option value="" data-i18n="allDirections">全部多空方向</option>
+                <option value="H-L">H−L</option>
+                <option value="L-H">L−H</option>
+                <option value="not-simple" data-i18n="notSimple">非两端多空组合</option>
+                <option value="ambiguous" data-i18n="ambiguous">方向未判定</option>
+                <option value="transformed" data-i18n="transformed">变换后排序</option>
+                <option value="N/A" data-i18n="notApplicable">不适用</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="evidenceCarrier">文献获取方式</span>
+              <select id="artifactFilter">
+                <option value="" data-i18n="allCarriers">全部来源类型</option>
+                <option value="pdf" data-i18n="localPdf">本地存档 PDF</option>
+                <option value="html" data-i18n="localHtml">本地存档 HTML</option>
+                <option value="none" data-i18n="externalOnly">外部文献链接</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="confidence">判定置信度</span>
+              <select id="confidenceFilter">
+                <option value="" data-i18n="allConfidence">全部判定置信度</option>
+                <option value="high" data-i18n="high">高</option>
+                <option value="medium" data-i18n="medium">中</option>
+                <option value="low" data-i18n="low">低</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="methodFilter">文献检验设计</span>
+              <select id="methodFilter">
+                <option value="" data-i18n="allMethodFamilies">全部检验设计</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="sort">排序</span>
+              <select id="sortSelect">
+                <option value="id" data-i18n="sortId">特征代码 A–Z</option>
+                <option value="direction" data-i18n="sortDirection">多空方向</option>
+                <option value="year-desc" data-i18n="sortYear">发表年份（新→旧）</option>
+                <option value="confidence" data-i18n="sortConfidence">判定置信度</option>
+              </select>
+            </label>
+            </div>
+          </details>
+
+          <div class="quick-filters" role="group" aria-label="快捷筛选">
+            <button class="chip active" data-quick-filter="all" type="button" data-i18n="all">全部</button>
+            <button class="chip" data-quick-filter="simple" type="button" data-i18n="explicitDirection">H−L / L−H</button>
+            <button class="chip" data-quick-filter="mismatch" type="button" data-i18n="codeMismatch">实现口径不一致</button>
+            <button class="chip" data-quick-filter="review" type="button" data-i18n="needsReview">需进一步核验</button>
+            <button class="chip" data-quick-filter="pdf" type="button" data-i18n="jumpPdf">PDF 页码可核验</button>
+          </div>
+        </div>
+
+        <div class="direction-key" id="directionKey" aria-label="组合方向图例">
+        </div>
+
+        <section class="methodology-overview" id="methodOverview" aria-labelledby="methodOverviewTitle">
+          <div class="methodology-overview-copy">
+            <p class="section-kicker" data-i18n="methodOverviewKicker">EMPIRICAL DESIGNS</p>
+            <h3 id="methodOverviewTitle" data-i18n="methodOverviewTitle">非两端组合的检验设计</h3>
+            <p data-i18n="methodOverviewCopy">
+              48项公司特征按照论文实际采用的估计对象与组合构造分类；选择类别可查看逐项方法。
+            </p>
+          </div>
+          <div class="method-family-chips" id="methodFamilyChips"></div>
+        </section>
+
+        <div id="results" class="results" aria-live="polite"></div>
+        <nav
+          class="pagination"
+          id="pagination"
+          aria-label="公司特征分页"
+          hidden
+        ></nav>
+
+        <div class="empty-state" id="emptyState" hidden>
+          <span aria-hidden="true">∅</span>
+          <h3 data-i18n="emptyTitle">无匹配的公司特征</h3>
+          <p data-i18n="emptyCopy">请调整检索词或筛选条件。</p>
+          <button class="primary-button" id="clearFiltersButton" type="button">
+            <span data-i18n="clearFilters">清除筛选条件</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p data-i18n="footerNote">自动检索摘录仅用于文献定位；最终判定以原始文献为准。</p>
+    </footer>
+
+    <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+    <aside
+      class="detail-drawer"
+      id="detailDrawer"
+      aria-labelledby="drawerTitle"
+      aria-hidden="true"
+    >
+      <button class="close-button" id="closeDrawerButton" type="button" aria-label="关闭特征详情">×</button>
+      <div id="drawerContent"></div>
+    </aside>
+
+    <dialog class="pdf-dialog" id="pdfDialog">
+      <div class="pdf-dialog-header">
+        <div>
+          <span class="dialog-kicker">SOURCE DOCUMENT</span>
+          <strong id="pdfDialogTitle">文献原文</strong>
+        </div>
+        <div class="pdf-dialog-actions">
+          <a id="pdfExternalLink" class="ghost-button dark" target="_blank" data-i18n="openNewWindow">在新窗口中查阅</a>
+          <button id="closePdfButton" class="close-button static" type="button" aria-label="关闭 PDF">×</button>
+        </div>
+      </div>
+      <iframe id="pdfFrame" title="文献原文 PDF"></iframe>
+    </dialog>
+
+    <dialog class="method-dialog" id="methodDialog">
+      <button id="closeMethodButton" class="close-button static" type="button" aria-label="关闭判定准则">×</button>
+      <p class="section-kicker" data-i18n="readingGuide">CLASSIFICATION CRITERIA</p>
+      <h2 data-i18n="methodTitle">多空方向的判定准则</h2>
+      <dl class="method-list">
+        <div>
+          <dt>H−L</dt>
+          <dd data-i18n="methodHL">文献按照特征值排序，构造多头高特征值组合与空头低特征值组合。</dd>
+        </div>
+        <div>
+          <dt>L−H</dt>
+          <dd data-i18n="methodLH">文献按照特征值排序，构造多头低特征值组合与空头高特征值组合。</dd>
+        </div>
+        <div>
+          <dt data-i18n="notSimple">非两端多空组合</dt>
+          <dd data-i18n="methodComplex">文献采用回归系数、多变量预测模型、事件研究或模型加权组合；该类检验不对应简单的两端多空组合。</dd>
+        </div>
+        <div>
+          <dt data-i18n="evidenceLevel">证据来源</dt>
+          <dd data-i18n="methodEvidence">人工摘录依据审计记录；自动摘录依据关键词检索。所有判定均应回溯至原始文献。</dd>
+        </div>
+        <div>
+          <dt data-i18n="sourceLanguage">引文语言</dt>
+          <dd data-i18n="methodLanguage">论文题名、组合构造与证据摘录保留原文表述。</dd>
+        </div>
+      </dl>
+      <h3 class="method-taxonomy-title" data-i18n="methodTaxonomyTitle">非两端组合的方法分类</h3>
+      <dl class="method-list method-taxonomy-list" id="methodTaxonomyList"></dl>
+    </dialog>
+  </body>
+</html>

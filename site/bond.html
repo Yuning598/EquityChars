@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="公司债特征、long–short excess return 构造、收益基准与原始文献证据。"
+    >
+    <title>公司债特征与组合构造 · Signal Atlas</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="bond.css">
+    <!-- BOND_ROUTE_STYLE -->
+    <!-- BOND_ROUTE_SCRIPTS -->
+    <script defer src="bond-legacy.js"></script>
+  </head>
+  <body class="bond-page">
+    <a class="skip-link" href="#bondCharacteristics">跳到债券特征目录</a>
+
+    <header class="bond-header">
+      <nav class="topbar asset-topbar" aria-label="主导航">
+        <a class="brand" href="./" aria-label="Signal Atlas 首页">
+          <span class="brand-mark bond-mark" aria-hidden="true">FI</span>
+          <span>
+            <strong>Signal Atlas</strong>
+            <small>Corporate-bond evidence audit</small>
+          </span>
+        </a>
+        <div class="asset-switch" aria-label="资产类别">
+          <a href="index.html">Equity</a>
+          <a class="active" href="bond.html" aria-current="page">Bond</a>
+        </div>
+        <div class="topbar-actions">
+                    <div class="module-nav" aria-label="页面模块">
+            <a class="ghost-button" href="#bondCharacteristics" data-bond-nav="characteristics">特征目录</a>
+          <a class="ghost-button" href="#bondMethods" data-bond-nav="methods">组合构造</a>
+          <a class="ghost-button" href="#bondProvenance" data-bond-nav="provenance">数据出处</a>
+          <a class="ghost-button" href="#bondPaperWiki" data-bond-nav="papers">原文定位</a>
+          </div>
+          <button class="language-button" id="bondLanguageToggle" type="button" aria-label="Switch language">
+            EN
+          </button>
+        </div>
+      </nav>
+
+      <div class="bond-hero page-banner">
+        <div>
+          <p class="eyebrow">CORPORATE-BOND CHARACTERISTICS &amp; PORTFOLIOS</p>
+          <h1>公司债特征与<br>超额收益构造</h1>
+        </div>
+        <div class="bond-hero-copy">
+          <p>
+            区分单债券超额收益、零成本多空因子、持续期调整收益与模型最优权重；
+            所有信号均保留形成期、分组断点、权重、持有期及收益基准。
+          </p>
+          <div class="audit-stamp">
+            <span>READ-ONLY SOURCE</span>
+            <strong>BondChars 未改动</strong>
+            <small>字段模式、样本范围与 SHA-256 已核验</small>
+          </div>
+        </div>
+      </div>
+
+      <section class="summary-grid bond-summary" aria-label="债券数据摘要">
+        <article class="summary-card">
+          <span>文献匹配特征</span>
+          <strong id="bondCharacteristicCount">—</strong>
+          <small>Deep Tangency Table A1</small>
+        </article>
+        <article class="summary-card accent-green">
+          <span>债券—月份</span>
+          <strong id="bondObservationCount">—</strong>
+          <small>共享 raw Feather</small>
+        </article>
+        <article class="summary-card accent-blue">
+          <span>唯一债券</span>
+          <strong id="bondCusipCount">—</strong>
+          <small>完整 CUSIP 数量</small>
+        </article>
+        <article class="summary-card accent-amber">
+          <span>组合方法</span>
+          <strong id="bondMethodCount">—</strong>
+          <small>排序、回归、复合与优化</small>
+        </article>
+      </section>
+    </header>
+
+    <section class="bond-overview" id="bondOverview" aria-labelledby="bondOverviewTitle">
+      <div class="bond-overview-heading">
+        <p class="section-kicker">RESEARCH GUIDE</p>
+        <h2 id="bondOverviewTitle">从研究对象到收益口径</h2>
+        <p id="bondOverviewLead">按研究任务进入相应模块；每一页只保留实现、收益定义或数据证据中与该任务直接相关的内容。</p>
+      </div>
+      <details class="bond-study-glossary">
+        <summary><span class="lang-zh">学习前先区分四个概念</span><span class="lang-en">Four distinctions before reading the evidence</span></summary>
+        <dl>
+          <div><dt>Bond-level excess return</dt><dd><span class="lang-zh">单只债券总收益相对于无风险基准的超额部分。</span><span class="lang-en">A bond’s total return net of the risk-free benchmark.</span></dd></div>
+          <div><dt>Zero-cost long-short return</dt><dd><span class="lang-zh">多头与空头腿按共同权重规则相减后的组合收益。</span><span class="lang-en">The return from subtracting the short leg from the long leg under a common weighting convention.</span></dd></div>
+          <div><dt>Duration adjustment</dt><dd><span class="lang-zh">剔除与利率期限暴露相关的收益成分，以识别信用相关部分。</span><span class="lang-en">Removing the return component associated with interest-rate duration exposure to isolate credit-related variation.</span></dd></div>
+          <div><dt>Primary-source locator</dt><dd><span class="lang-zh">可以回到原文验证的定位句和页码，而不是概述性结论。</span><span class="lang-en">A locating passage and page number that can be checked in the original paper, not a summary claim.</span></dd></div>
+        </dl>
+      </details>      <div class="bond-overview-grid">
+        <a data-bond-overview="characteristics" href="#bondCharacteristics"><span>01</span><strong>特征目录</strong><p>41 个与文献表格逐项匹配的债券特征。</p></a>
+        <a data-bond-overview="returns" href="#bondReturns"><span>02</span><strong>收益定义</strong><p>区分单债券超额收益、零成本多空收益与久期调整收益。</p></a>
+        <a data-bond-overview="methods" href="#bondMethods"><span>03</span><strong>组合构造</strong><p>核对形成期、断点、权重、持有期与收益基准。</p></a>
+        <a data-bond-overview="provenance" href="#bondProvenance"><span>04</span><strong>数据出处</strong><p>阅读共享数据的样本范围、字段匹配与只读核验。</p></a>
+      </div>
+    </section>
+
+    <main class="bond-workspace">
+      <section class="bond-provenance" id="bondProvenance" aria-labelledby="provenanceTitle"><div><p class="section-kicker">REPRODUCIBILITY SOURCES</p><h2 id="provenanceTitle">计算与数据来源</h2></div><div class="provenance-grid"><article><span>计算实现</span><strong>BondChars public implementation</strong><p>逐项口径、滚动窗口与滞后规则来自可读源码；特征页内提供函数与行号定位。</p><a href="https://github.com/yuanzwang5/BondChars" target="_blank" rel="noreferrer">查看源码 ↗</a></article><article><span>字段定义</span><strong>Feng et al., Table A1</strong><p>核心目录只保留与原文 Table A1 逐项对应的 41 个债券特征，并保留本地 PDF 定位。</p><a href="bond-paper-wiki.html?paper=deep-tangency-portfolio">查看文献证据 →</a></article><article><span>数据快照</span><strong id="bondDateRange">—</strong><p>raw 与 imputed Feather 文件用于字段与样本核验；计算定义以公开实现为准。</p></article></div></section><section class="return-basis" aria-labelledby="returnBasisTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">RETURN DEFINITIONS</p>
+            <h2 id="returnBasisTitle">四种收益对象必须分开</h2>
+          </div>
+          <p>“Excess return”在公司债文献中并非唯一口径。</p>
+        </div>
+        <div class="return-basis-grid">
+          <article>
+            <span>01</span>
+            <h3>单债券超额收益</h3>
+            <div class="return-formula"><i>r</i><sup>e</sup><sub>i,t</sub> = r̃<sub>i,t</sub> − <i>r</i><sup>f</sup><sub>t</sub></div>
+            <p>常用一个月国库券收益作为无风险利率；债券总收益包含价格、应计利息与票息。</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>零成本多空收益</h3>
+            <div class="return-formula"><i>r</i><sup>LS</sup><sub>t</sub> = <i>r</i><sup>L</sup><sub>t</sub> − <i>r</i><sup>S</sup><sub>t</sub></div>
+            <p>若多头权重合计 +1、空头合计 −1，共同无风险利率代数抵消；方向仍须按论文定义。</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>持续期调整收益</h3>
+            <div class="return-formula"><i>r</i><sup>DA</sup><sub>i,t</sub> = <i>r</i><sub>i,t</sub> − <i>r</i><sup>Tsy</sup><sub>i,t</sub></div>
+            <p>扣除与债券现金流久期匹配的国债反事实收益，识别信用部分而非简单现金超额收益。</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>模型加权收益</h3>
+            <div class="return-formula"><i>r</i><sup>M</sup><sub>t</sub> = <strong>w</strong><sup>′</sup><sub>t−1</sub><strong>r</strong><sub>t</sub></div>
+            <p>IPCA、深度特征或最大夏普组合的权重由联合估计决定，不能逐变量预设 H−L。</p>
+          </article>
+        </div>
+        <section class="return-source-evidence" aria-labelledby="returnEvidenceTitle">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">SOURCE MAP</p>
+              <h2 id="returnEvidenceTitle">逐项原文定位</h2>
+            </div>
+            <p>收益对象、论文口径与定位分开列示，避免将不同的 excess return 定义混为一谈。</p>
+          </div>
+          <div class="return-evidence-grid" id="returnEvidenceList"></div>
+        </section>
+      </section>
+
+      <section class="bond-section" id="bondCharacteristics" aria-labelledby="bondCharacteristicsTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">SOURCE-MATCHED CHARACTERISTICS</p>
+            <h2 id="bondCharacteristicsTitle">41 个债券特征</h2>
+          </div>
+          <p id="bondCharacteristicMeta"></p>
+        </div>
+
+        <div class="bond-controls">
+          <label class="search-box" for="bondSearch">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/>
+            </svg>
+            <input
+              id="bondSearch"
+              type="search"
+              placeholder="搜索特征、字段、定义或文献…"
+              autocomplete="off"
+            >
+          </label>
+          <label>
+            <span>类别</span>
+            <select id="bondCategoryFilter">
+              <option value="">全部类别</option>
+            </select>
+          </label>
+        </div>
+        <p class="bond-table-note" id="bondCharacteristicContext">这 41 项均为联合估计的特征输入；原文未为单项变量设定独立的 H−L 组合方向。</p>
+
+        <div class="bond-table-wrap">
+          <table class="bond-table">
+            <thead>
+              <tr>
+                <th>论文标识</th>
+                <th>共享字段</th>
+                <th>经济含义</th>
+                <th>文献定义</th>
+                
+              </tr>
+            </thead>
+            <tbody id="bondCharacteristicRows"></tbody>
+          </table>
+        </div>
+        <div class="empty-state compact" id="bondEmpty" hidden>
+          <h3>无匹配特征</h3>
+          <p>请调整检索词或类别。</p>
+        </div>
+      </section>
+
+      <section class="bond-section method-section" id="bondMethods" aria-labelledby="bondMethodsTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">LONG–SHORT EXCESS-RETURN METHODS</p>
+            <h2 id="bondMethodsTitle">学者组合构造对照</h2>
+          </div>
+          <p>先选择方法族，再核对形成期、权重与收益基准。</p>
+        </div>
+        <div class="method-filter-row" id="bondMethodFilters"></div>
+        <div class="bond-method-list" id="bondMethodList"></div>
+      </section>
+
+      <section class="bond-source-evidence" id="bondSourceEvidence" aria-labelledby="bondSourceEvidenceTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">PRIMARY-SOURCE LOCATORS</p>
+            <h2 id="bondSourceEvidenceTitle"></h2>
+          </div>
+          <p id="bondSourceEvidenceLead"></p>
+        </div>
+        <div class="bond-source-evidence-grid" id="bondSourceEvidenceGrid"></div>
+      </section>
+      <section class="bond-paper-wiki" id="bondPaperWiki" aria-labelledby="bondPaperWikiTitle">
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">PAPER WIKI</p>
+            <h2 id="bondPaperWikiTitle">相关论文与定义定位</h2>
+          </div>
+          <p id="bondPaperWikiLead">字段的直接定义来源与相关组合方法论文分开标示；只对已核验的页码提供本地 PDF 跳转。</p>
+        </div>
+        <div class="bond-paper-wiki-list" id="bondPaperWikiList"></div>
+      </section>
+      <section class="auxiliary-section" aria-labelledby="auxiliaryTitle">
+        <div>
+          <p class="section-kicker">AUXILIARY FIELDS</p>
+          <h2 id="auxiliaryTitle">13 个字段暂不列为核心信号</h2>
+          <p>
+            这些字段是收益、价格、基准匹配输入或候选变体。除非找到明确的原始定义与可复现构造，
+            不进入债券特征主表。
+          </p>
+        </div>
+        <details>
+          <summary>查看辅助字段</summary>
+          <div class="auxiliary-grid" id="bondAuxiliaryList"></div>
+        </details>
+      </section>
+    </main>
+
+    <div class="drawer-backdrop" id="bondPaperDrawerBackdrop" hidden></div>
+    <aside class="detail-drawer" id="bondPaperDrawer" aria-labelledby="bondPaperDrawerTitle" aria-hidden="true">
+      <button class="close-button" id="closeBondPaperDrawerButton" type="button" aria-label="Close paper detail">&times;</button>
+      <div id="bondPaperDrawerContent"></div>
+    </aside>
+
+    <footer>
+      <p>
+        组合方向与收益口径以原始论文为准；共享 BondChars 仅用于只读字段核验，不在该目录写入任何文件。
+      </p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+# Downloaded and generated research artifacts remain Dropbox-only.
+papers/*
+supporting-information/*
+extracted-text/*
+download-runs/*
+downloads/*
+
+!papers/.gitkeep
+!supporting-information/.gitkeep
+!extracted-text/.gitkeep
+!download-runs/.gitkeep
+!downloads/.gitkeep
+
+# Local credentials and session state.
+.env
+.env.*
+*.key
+*.token
+credentials*.json
+.browser-profile/
+.browser-tools/
+
+# Agent/session state is not source.
+.agents/
+.codex/
+.omx/
+
+# Caches and editor artifacts.
+__pycache__/
+*.py[cod]
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db
+
+# Local reference copies are intentionally excluded from the code archive.
+site/papers/*.pdf
+site/papers/**/*.pdf
+tmp/

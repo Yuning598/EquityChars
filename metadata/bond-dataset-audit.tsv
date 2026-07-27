@@ -1,0 +1,18 @@
+metric	value	unit	source	status	note
+source_directory	E:\Dropbox\Research\Data\BondChars	path	filesystem	read-only	共享目录本轮仅执行读取、模式检查与哈希计算。
+raw_file	characteristics_raw.feather	file	filesystem	read-only	未改动。
+imputed_file	characteristics_imputed.feather	file	filesystem	read-only	未改动。
+raw_rows	1207327	bond-months	PyArrow metadata	verified	
+raw_columns	59	columns	PyArrow schema	verified	含标识、日期、收益、价格与特征字段。
+raw_numeric_fields	54	numeric fields	PyArrow schema	verified	排除 index、complete_cusip、trd_exctn_dt、last_trade_on 与 date。
+core_characteristics	41	characteristics	Deep Tangency Portfolio, Table A1	verified	41 个原文特征均能逐项匹配到 raw Feather 字段。
+auxiliary_numeric_fields	13	fields	schema-to-paper crosswalk	verified	不作为已确认的核心债券特征。
+unique_bonds	22235	CUSIPs	PyArrow scan	verified	
+sample_start	2002-08-31	date	PyArrow scan	verified	
+sample_end	2024-12-31	date	PyArrow scan	verified	
+imputed_rows	1207327	bond-months	PyArrow metadata	verified	
+imputed_columns	49	columns	PyArrow schema	verified	含 41 个核心特征、标识字段及必要收益字段。
+imputation_transform	cross-sectional ranks in [-1,1]; missing values set to zero	method	Deep Tangency Portfolio and Feather inspection	verified	原文说明按月横截面排序并标准化至 [-1,1]、均值为零；imputed 文件无缺失且数值形态一致。
+raw_sha256	0AD8E4C5CBA0EF4BC0EACCE1F192ED9041F8A672C31663E7DAAE40AF996C70E7	SHA-256	Get-FileHash	baseline	完成后再次计算以验证只读约束。
+imputed_sha256	86F1FD92D7BB296F397819B2FD8D218175C4B92DDD02A167C3D6659E8E5FD99B	SHA-256	Get-FileHash	baseline	完成后再次计算以验证只读约束。
+provenance_assessment	strong structural match; identity not proven	text	research audit	caution	共享文件的字段集合与论文 41 个债券特征完全匹配，但目录内没有 README、代码或论文元数据足以证明文件即论文最终发布版本。
