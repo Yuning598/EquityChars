@@ -38,17 +38,37 @@ jobs:
             --release-id "${{ github.event.inputs.release_id || '2024-12' }}" \
             --dataset-label characteristics_raw
 
+      - name: Build bond long-short portfolios
+        run: |
+          python scripts/build_bond_long_short_portfolios.py \
+            --source "${{ github.event.inputs.source_url || 'https://www.dropbox.com/scl/fi/fe4kde6pk39hcg6d31ti5/characteristics_raw.feather?rlkey=3bbjf8tjfvbgepz5c2ot4j460&st=sssww9ep&dl=0' }}" \
+            --output chars/data/bond_long_short_raw.json \
+            --release-id "${{ github.event.inputs.release_id || '2024-12' }}" \
+            --return-column monthly_return
+
+      - name: Verify portfolio builders
+        run: python -m unittest discover -s tests -p "test_portfolio_builders.py" -v
+
+      - name: Validate generated bond portfolios
+        run: |
+          python scripts/validate_long_short_json.py \
+            --input chars/data/bond_long_short_raw.json \
+            --expected-characteristics 41 \
+            --require-quantiles 5 10
+
       - name: Upload generated explorer data
         uses: actions/upload-artifact@v4
         with:
           name: bond-monthly-raw-json
-          path: chars/data/bond_monthly_raw.json
+          path: |
+            chars/data/bond_monthly_raw.json
+            chars/data/bond_long_short_raw.json
 
       - name: Commit generated explorer data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add chars/data/bond_monthly_raw.json
+          git add chars/data/bond_monthly_raw.json chars/data/bond_long_short_raw.json
           if git diff --cached --quiet; then
             echo "No explorer data changes."
           else
@@ -58,7 +78,7 @@ jobs:
               -m "Constraint: GitHub Pages should serve precomputed JSON instead of parsing Feather files in the browser" \
               -m "Confidence: medium" \
               -m "Scope-risk: narrow" \
-              -m "Tested: scripts/build_bond_explorer.py completed in GitHub Actions" \
+              -m "Tested: bond explorer build, bond long-short build, portfolio-builder unit tests, and generated JSON validation completed in GitHub Actions" \
               -m "Not-tested: Visual rendering in GitHub Actions"
             git push
           fi

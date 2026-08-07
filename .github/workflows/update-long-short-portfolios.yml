@@ -49,8 +49,16 @@ jobs:
             --dataset-label chars_raw_no_impute \
             --update-mode "${{ inputs.update_mode }}" \
             --workers 2 \
+            --directions documents/signal_directions.csv \
             --output chars/data/equity_long_short_raw_no_impute.json \
             "${extra_args[@]}"
+      - name: Validate generated portfolio summary
+        run: |
+          python scripts/validate_long_short_json.py \
+            --input chars/data/equity_long_short_raw_no_impute.json \
+            --expected-characteristics 98 \
+            --require-quantiles 5 10 \
+            --directions documents/signal_directions.csv
       - name: Commit portfolio summary
         run: |
           if git diff --quiet -- chars/data/equity_long_short_raw_no_impute.json; then

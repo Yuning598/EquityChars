@@ -150,17 +150,38 @@ def leg_metadata(direction: int) -> dict[str, object]:
     }
 
 
-def summarize_returns(returns: list[float]) -> dict[str, object]:
+def calendar_year_returns(rows: list[dict[str, object]]) -> list[float]:
+    """Compound the available monthly long-short returns within each calendar year."""
+    wealth_by_year: dict[str, float] = {}
+    for row in rows:
+        value = row.get("long_short")
+        if value is None or not math.isfinite(float(value)):
+            continue
+        year = str(row["date"])[:4]
+        wealth_by_year[year] = wealth_by_year.get(year, 1.0) * (1.0 + float(value))
+    return [wealth - 1.0 for _, wealth in sorted(wealth_by_year.items())]
+
+
+def geometric_annual_return(returns: list[float]) -> float | None:
+    if not returns or any(value <= -1.0 for value in returns):
+        return None
+    wealth = math.prod(1.0 + value for value in returns)
+    return wealth ** (12.0 / len(returns)) - 1.0
+
+
+def summarize_returns(returns: list[float], rows: list[dict[str, object]] | None = None) -> dict[str, object]:
     mean = sum(returns) / len(returns) if returns else None
     vol = None
     if len(returns) > 1 and mean is not None:
         vol = math.sqrt(sum((x - mean) ** 2 for x in returns) / (len(returns) - 1))
     return {
         "months": len(returns),
-        "mean_monthly": finite_or_none(mean),
+        "arithmetic_mean_monthly": finite_or_none(mean),
+        "geometric_mean_annualized": finite_or_none(geometric_annual_return(returns)),
         "vol_monthly": finite_or_none(vol),
         "sharpe_annualized": finite_or_none(annualized_sharpe(returns)),
-        "max_drawdown": finite_or_none(max_drawdown(returns)),
+        "max_drawdown_monthly": finite_or_none(max_drawdown(returns)),
+        "max_drawdown_yearly": finite_or_none(max_drawdown(calendar_year_returns(rows or []))),
         "max_1m_loss": finite_or_none(min(returns) if returns else None),
     }
 
@@ -177,24 +198,28 @@ def recompute_rows(rows: list[dict[str, object]]) -> tuple[list[dict[str, object
             returns.append(numeric)
     for row, cumret in zip(sorted_rows, cumulative_returns(cumulative_source)):
         row["cum_long_short"] = cumret
-    return sorted_rows, summarize_returns(returns)
+    return sorted_rows, summarize_returns(returns, sorted_rows)
 
 
 def empty_result(direction: int) -> dict[str, object]:
-    return {**leg_metadata(direction), "vw": [], "ew": [], "summary": {"vw": {}, "ew": {}}}
+    return {**leg_metadata(direction), "quantiles": {}}
 
 
 def latest_month(existing: dict[str, object] | None) -> str | None:
     if not existing:
         return None
     latest: str | None = None
-    for weighting in ("vw", "ew"):
-        rows = existing.get(weighting) if isinstance(existing, dict) else None
-        if not isinstance(rows, list):
+    quantiles = existing.get("quantiles", {}) if isinstance(existing, dict) else {}
+    for result in quantiles.values() if isinstance(quantiles, dict) else []:
+        if not isinstance(result, dict):
             continue
-        for row in rows:
-            if isinstance(row, dict) and isinstance(row.get("date"), str):
-                latest = max(latest, row["date"]) if latest else row["date"]
+        for weighting in ("vw", "ew"):
+            rows = result.get(weighting)
+            if not isinstance(rows, list):
+                continue
+            for row in rows:
+                if isinstance(row, dict) and isinstance(row.get("date"), str):
+                    latest = max(latest, row["date"]) if latest else row["date"]
     return latest
 
 
@@ -213,26 +238,18 @@ def merge_weighting_rows(
     return recompute_rows(list(by_date.values()))
 
 
-def merge_result(
-    existing: dict[str, object] | None,
-    new: dict[str, object],
-    direction: int,
-) -> dict[str, object]:
+def merge_result(existing: dict[str, object] | None, new: dict[str, object], direction: int) -> dict[str, object]:
     metadata = leg_metadata(direction)
-    vw_rows, vw_summary = merge_weighting_rows(
-        existing.get("vw") if isinstance(existing, dict) else None,
-        new.get("vw") if isinstance(new, dict) else None,
-    )
-    ew_rows, ew_summary = merge_weighting_rows(
-        existing.get("ew") if isinstance(existing, dict) else None,
-        new.get("ew") if isinstance(new, dict) else None,
-    )
-    return {
-        **metadata,
-        "vw": vw_rows,
-        "ew": ew_rows,
-        "summary": {"vw": vw_summary, "ew": ew_summary},
-    }
+    quantiles: dict[str, object] = {}
+    new_quantiles = new.get("quantiles", {}) if isinstance(new, dict) else {}
+    old_quantiles = existing.get("quantiles", {}) if isinstance(existing, dict) else {}
+    for groups in sorted(set(old_quantiles) | set(new_quantiles), key=int):
+        old = old_quantiles.get(groups, {})
+        fresh = new_quantiles.get(groups, {})
+        vw_rows, vw_summary = merge_weighting_rows(old.get("vw"), fresh.get("vw"))
+        ew_rows, ew_summary = merge_weighting_rows(old.get("ew"), fresh.get("ew"))
+        quantiles[groups] = {"vw": vw_rows, "ew": ew_rows, "summary": {"vw": vw_summary, "ew": ew_summary}}
+    return {**metadata, "quantiles": quantiles}
 
 
 def build_one_characteristic(
@@ -241,6 +258,7 @@ def build_one_characteristic(
     min_stocks: int,
     direction: int,
     start_month: str | None = None,
+    quantile_counts: tuple[int, ...] = (5, 10),
 ) -> dict[str, object]:
     columns = ["date", "ret", "me"] if characteristic == "me" else ["date", "ret", "me", characteristic]
     frame = pq.read_table(path, columns=columns).to_pandas()
@@ -267,71 +285,55 @@ def build_one_characteristic(
 
     frame["rank_month"] = frame.groupby("month")["signal"].rank(method="first", ascending=True)
     frame["n_month"] = frame.groupby("month")["signal"].transform("size")
-    frame["decile"] = (((frame["rank_month"] - 1) * 10 / frame["n_month"]).astype(int) + 1).clip(1, 10)
-    frame = frame.loc[frame["decile"].isin([1, 10])].copy()
-    long_decile = 10 if direction >= 0 else 1
-    short_decile = 1 if direction >= 0 else 10
-    frame["leg"] = frame["decile"].map({long_decile: "long", short_decile: "short"})
     frame["vw_weight"] = frame["me"].where(frame["me"].notna() & (frame["me"] > 0))
-
-    ew = (
-        frame.groupby(["month", "leg"], observed=True)
-        .agg(ret=("ret", "mean"), count=("ret", "size"))
-        .unstack("leg")
-        .sort_index()
-    )
-    ew.columns = [f"{metric}_{leg}" for metric, leg in ew.columns]
-    ew = ew.reset_index()
-
-    vw_source = frame.dropna(subset=["vw_weight"]).copy()
-    if vw_source.empty:
-        vw = pd.DataFrame(columns=["month"])
-    else:
-        vw_source["weighted_ret"] = vw_source["ret"] * vw_source["vw_weight"]
-        vw = (
-            vw_source.groupby(["month", "leg"], observed=True)
-            .agg(weighted_ret=("weighted_ret", "sum"), weight=("vw_weight", "sum"), count=("ret", "size"))
-            .assign(ret=lambda data: data["weighted_ret"] / data["weight"])
-            .drop(columns=["weighted_ret", "weight"])
-            .unstack("leg")
-            .sort_index()
-        )
-        vw.columns = [f"{metric}_{leg}" for metric, leg in vw.columns]
-        vw = vw.reset_index()
 
     def serialize(portfolio: pd.DataFrame) -> tuple[list[dict[str, object]], dict[str, object]]:
         if portfolio.empty:
             return [], {}
         rows = []
-        returns = []
         for row in portfolio.to_dict("records"):
-            long_ret = row.get("ret_long")
-            short_ret = row.get("ret_short")
-            long_ret = None if pd.isna(long_ret) else long_ret
-            short_ret = None if pd.isna(short_ret) else short_ret
+            long_ret = None if pd.isna(row.get("ret_long")) else row.get("ret_long")
+            short_ret = None if pd.isna(row.get("ret_short")) else row.get("ret_short")
             long_short = None if long_ret is None or short_ret is None else float(long_ret) - float(short_ret)
-            if long_short is not None and math.isfinite(long_short):
-                returns.append(long_short)
-            rows.append(
-                {
-                    "date": row["month"],
-                    "long": finite_or_none(long_ret),
-                    "short": finite_or_none(short_ret),
-                    "long_short": finite_or_none(long_short),
-                    "long_count": int(0 if pd.isna(row.get("count_long")) else row.get("count_long") or 0),
-                    "short_count": int(0 if pd.isna(row.get("count_short")) else row.get("count_short") or 0),
-                }
-            )
+            rows.append({"date": row["month"], "long": finite_or_none(long_ret), "short": finite_or_none(short_ret), "long_short": finite_or_none(long_short), "long_count": int(0 if pd.isna(row.get("count_long")) else row.get("count_long") or 0), "short_count": int(0 if pd.isna(row.get("count_short")) else row.get("count_short") or 0)})
         return recompute_rows(rows)
 
-    vw_rows, vw_summary = serialize(vw)
-    ew_rows, ew_summary = serialize(ew)
-    return {
-        **leg_metadata(direction),
-        "vw": vw_rows,
-        "ew": ew_rows,
-        "summary": {"vw": vw_summary, "ew": ew_summary},
-    }
+    quantiles: dict[str, object] = {}
+    for groups in quantile_counts:
+        sorted_frame = frame.copy()
+        sorted_frame["bucket"] = (((sorted_frame["rank_month"] - 1) * groups / sorted_frame["n_month"]).astype(int) + 1).clip(1, groups)
+        sorted_frame = sorted_frame.loc[sorted_frame["bucket"].isin([1, groups])].copy()
+        long_bucket = groups if direction >= 0 else 1
+        short_bucket = 1 if direction >= 0 else groups
+        sorted_frame["leg"] = sorted_frame["bucket"].map({long_bucket: "long", short_bucket: "short"})
+        ew = (
+            sorted_frame.groupby(["month", "leg"], observed=True)
+            .agg(ret=("ret", "mean"), count=("ret", "size"))
+            .unstack("leg")
+            .sort_index()
+        )
+        ew.columns = [f"{metric}_{leg}" for metric, leg in ew.columns]
+        ew = ew.reset_index()
+
+        vw_source = sorted_frame.dropna(subset=["vw_weight"]).copy()
+        if vw_source.empty:
+            vw = pd.DataFrame(columns=["month"])
+        else:
+            vw_source["weighted_ret"] = vw_source["ret"] * vw_source["vw_weight"]
+            vw = (
+                vw_source.groupby(["month", "leg"], observed=True)
+                .agg(weighted_ret=("weighted_ret", "sum"), weight=("vw_weight", "sum"), count=("ret", "size"))
+                .assign(ret=lambda data: data["weighted_ret"] / data["weight"])
+                .drop(columns=["weighted_ret", "weight"])
+                .unstack("leg")
+                .sort_index()
+            )
+            vw.columns = [f"{metric}_{leg}" for metric, leg in vw.columns]
+            vw = vw.reset_index()
+        vw_rows, vw_summary = serialize(vw)
+        ew_rows, ew_summary = serialize(ew)
+        quantiles[str(groups)] = {"vw": vw_rows, "ew": ew_rows, "summary": {"vw": vw_summary, "ew": ew_summary}}
+    return {**leg_metadata(direction), "quantiles": quantiles}
 
 
 def build_portfolios(
@@ -360,6 +362,21 @@ def build_portfolios(
         if limit is not None:
             chars = chars[:limit]
         directions = load_directions(directions_path)
+        if directions_path is not None:
+            missing_directions = sorted(set(chars) - set(directions))
+            if missing_directions:
+                raise ValueError(
+                    "Direction file is missing characteristics: "
+                    + ", ".join(missing_directions)
+                )
+            invalid_directions = sorted(
+                char for char in chars if directions[char] not in (-1, 1)
+            )
+            if invalid_directions:
+                raise ValueError(
+                    "Directions must be either -1 or 1: "
+                    + ", ".join(invalid_directions)
+                )
         existing_payload: dict[str, object] = {}
         existing_series: dict[str, dict[str, object]] = {}
         partial_recompute = requested_chars is not None
@@ -415,19 +432,13 @@ def build_portfolios(
                 "direction": results[char]["direction"],
                 "long_leg": results[char]["long_leg"],
                 "short_leg": results[char]["short_leg"],
-                "vw": results[char]["vw"],
-                "ew": results[char]["ew"],
+                "quantiles": results[char]["quantiles"],
             }
             for char in chars
         }
-        computed_summary = {char: results[char]["summary"] for char in chars}
-
         if partial_recompute and existing_payload:
             series = dict(existing_series)
             series.update(computed_series)
-            existing_summary = existing_payload.get("summary", {})
-            summary = dict(existing_summary) if isinstance(existing_summary, dict) else {}
-            summary.update(computed_summary)
             existing_chars = existing_payload.get("characteristics")
             if isinstance(existing_chars, list):
                 output_chars = [str(char) for char in existing_chars]
@@ -438,7 +449,6 @@ def build_portfolios(
                 output_chars = sorted(series)
         else:
             series = computed_series
-            summary = computed_summary
             output_chars = chars
 
         metadata = {
@@ -447,7 +457,7 @@ def build_portfolios(
             "source": Path(str(source)).name if not source.startswith(("http://", "https://")) else source,
             "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "characteristics": len(output_chars),
-            "orientation": "direction_adjusted",
+            "orientation": "direction_adjusted" if directions_path else "high_minus_low",
             "directions_source": str(directions_path) if directions_path else None,
             "update_mode": update_mode,
             "previous_generated_at": (
@@ -455,7 +465,7 @@ def build_portfolios(
                 if isinstance(existing_payload.get("metadata"), dict)
                 else None
             ),
-            "formation": "monthly decile portfolios; long high-signal decile when Direction=1 and low-signal decile when Direction=-1; ret is already shifted to t+1 in the source file",
+            "formation": "monthly quintile and decile portfolios; the default is High minus Low, while an explicitly supplied direction file may reverse individual signals; ret is already shifted to t+1 in the source file",
         }
         if partial_recompute:
             metadata["partial_recomputed_characteristics"] = chars
@@ -464,7 +474,6 @@ def build_portfolios(
             "metadata": metadata,
             "characteristics": output_chars,
             "series": series,
-            "summary": summary,
         }
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
@@ -482,7 +491,7 @@ def main() -> None:
     parser.add_argument("--min-stocks", type=int, default=100)
     parser.add_argument("--limit", type=int, default=None, help="Optional development limit for the number of characteristics.")
     parser.add_argument("--workers", type=int, default=1, help="Number of characteristics to process in parallel.")
-    parser.add_argument("--directions", default="documents/signal_directions.csv")
+    parser.add_argument("--directions", default=None, help="Optional CSV with Acronym and Direction columns for literature-confirmed sign reversals.")
     parser.add_argument(
         "--update-mode",
         choices=["incremental", "full"],
