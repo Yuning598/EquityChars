@@ -37,7 +37,7 @@ class PortfolioBuilderTests(unittest.TestCase):
             payload = json.loads(output.read_text())
             result = payload["series"]["signal"]
             self.assertEqual(set(result["quantiles"]), {"5", "10"})
-            summary = result["quantiles"]["5"]["vw"]["summary"]
+            summary = result["quantiles"]["5"]["summary"]["vw"]
             self.assertIn("arithmetic_mean_monthly", summary)
             self.assertIn("geometric_mean_annualized", summary)
             self.assertIn("max_drawdown_monthly", summary)
