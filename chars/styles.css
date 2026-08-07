@@ -837,7 +837,7 @@ code {
 }
 
 .about-portfolio .portfolio-summary {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin-top: 0.7rem;
 }
 
