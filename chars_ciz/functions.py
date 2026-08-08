@@ -442,6 +442,7 @@ def standardize(df: pl.DataFrame):
         'permno', 'date', 'datadate', 'gvkey', 'sic', 'count',
         'exchcd', 'shrcd', 'ffi49', 'ret', 'retadj', 'retx',
         'lag_me', 'ticker', 'conm', 'comnam', 'prc', 'shrout',
+        'size_grp',
         'primaryexch', 'conditionaltype', 'tradingstatusflg',
         'sharetype', 'securitytype', 'securitysubtype',
         'usincflg', 'issuertype',

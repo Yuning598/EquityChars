@@ -74,7 +74,7 @@ def _execute_download(con, table_name, query, output_file):
 # TABLE DEFINITIONS - Edit these queries to modify what data to download
 # ====================================================================================================
 
-def get_tables_config(start_date='2020-01-01'):
+def get_tables_config(start_date='2024-01-01'):
     """
     Define all tables to download with their queries.
     Edit the queries in this function to modify what data to download.
@@ -233,7 +233,7 @@ def get_tables_config(start_date='2020-01-01'):
 
 
 @measure_time
-def download_all_tables(username, password, start_date='2023-01-01'):
+def download_all_tables(username, password, start_date='2024-01-01'):
     """
     Download all required tables from WRDS with fresh connection per table to avoid timeouts.
     
@@ -243,7 +243,7 @@ def download_all_tables(username, password, start_date='2023-01-01'):
     Args:
         username: WRDS username
         password: WRDS password
-        start_date: Filter for datadate >= start_date (default '2020-01-01')
+        start_date: Filter for datadate >= start_date (default '2024-01-01')
         
     Output:
         Parquet files for comp_funda, crsp_msf, and ccm.
@@ -277,8 +277,8 @@ def download_all_tables(username, password, start_date='2023-01-01'):
 
 if __name__ == "__main__":
     # Prompt for WRDS credentials
-    username = input("Enter WRDS username: ")
+    username = "han3183621"
     password = input("Enter WRDS password: ")
     
     # Download all tables in one session (recommended to avoid connection timeouts)
-    download_all_tables(username, password, start_date='1940-01-01')
+    download_all_tables(username, password, start_date='2024-01-01')

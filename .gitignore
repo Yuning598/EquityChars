@@ -198,7 +198,15 @@ wrds/
 
 *.parquet
 *.md
+!utils/WRDS_CLOUD.md
+!utils/WRDS_CLOUD_MONTHLY.md
 *.csv
 *.xlsx
 *.png
 *.pdf
+
+archive/
+utils/
+data/
+data*
+.*/
