@@ -167,12 +167,12 @@
     const bucketLabel = `${quantiles.value}-tile ${longLeg} minus ${shortLeg}`;
     const values = stats(rows);
     summary.innerHTML = `
-      <div><strong>${formatPercent(values.arithmetic)}</strong><span>arithmetic mean monthly return</span></div>
-      <div><strong>${formatPercent(values.geometric)}</strong><span>geometric mean annualized return</span></div>
-      <div><strong>${formatNumber(values.sharpe)}</strong><span>annualized Sharpe</span></div>
-      <div><strong>${formatPercent(values.monthlyMdd)}</strong><span>max drawdown — monthly return path</span></div>
-      <div><strong>${formatPercent(values.yearlyMdd)}</strong><span>max drawdown — calendar-year return path</span></div>
-      <div><strong>${formatPercent(values.worst)}</strong><span>worst monthly return</span></div>`;
+      <div><strong>${formatPercent(values.arithmetic)}</strong><span>Arithmetic mean monthly return</span></div>
+      <div><strong>${formatPercent(values.geometric)}</strong><span>Geometric mean annualized return</span></div>
+      <div><strong>${formatNumber(values.sharpe)}</strong><span>Annualized Sharpe</span></div>
+      <div><strong>${formatPercent(values.monthlyMdd)}</strong><span>Max drawdown — monthly return path</span></div>
+      <div><strong>${formatPercent(values.yearlyMdd)}</strong><span>Max drawdown — calendar-year return path</span></div>
+      <div><strong>${formatPercent(values.worst)}</strong><span>Worst monthly return</span></div>`;
     drawChart(rows, bucketLabel);
     const returnLabel = root.dataset.returnLabel || "return";
     caption.textContent = `${bucketLabel}; ${weighting.options[weighting.selectedIndex].text}. ${returnLabel}. The chart uses ${scale?.value === "log" ? "a log wealth-multiple axis" : "a linear cumulative-return axis"}. The maximum-drawdown labels state whether monthly compounded returns or calendar-year compounded returns were used.`;
