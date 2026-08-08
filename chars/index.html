@@ -73,58 +73,91 @@
             <section
               class="explorer about-portfolio"
               data-long-short-explorer
-              data-summary-url="data/equity_long_short_raw_no_impute.json"
+              data-portfolio-id="equity"
+              data-summary-url="data/equity_long_short/index.json"
+              data-series-base-url="data/equity_long_short"
               data-return-label="Monthly stock return from the released panel; the source return is already aligned to t+1."
             >
               <div class="explorer-controls">
                 <label>Characteristic <select data-portfolio-characteristic-select></select></label>
-                <label>Sort <select data-portfolio-quantiles-select><option value="5">Quintile 5−1</option><option value="10" selected>Decile 10−1</option></select></label>
+                <label>Sort <select data-portfolio-quantiles-select><option value="5">5 portfolios (top/bottom 20%)</option><option value="10" selected>10 portfolios (top/bottom 10%)</option></select></label>
                 <label>Weighting <select data-portfolio-weighting-select><option value="vw">Value-weighted</option><option value="ew">Equal-weighted</option></select></label>
                 <label>Chart scale <select data-portfolio-scale-select><option value="log" selected>Log wealth multiple</option><option value="linear">Linear cumulative return</option></select></label>
-                <span class="muted" data-portfolio-status>Loading portfolios...</span>
               </div>
               <div class="portfolio-summary" data-portfolio-summary></div>
               <div class="chart-panel" data-portfolio-chart></div>
               <div class="portfolio-range" data-portfolio-range hidden>
+                <div class="portfolio-range-labels">
+                  <span data-portfolio-full-start></span>
+                  <span>Drag the handles to change the window</span>
+                  <span data-portfolio-full-end></span>
+                </div>
                 <div class="portfolio-range-track">
+                  <div class="portfolio-range-selection" data-portfolio-range-selection></div>
                   <input type="range" min="0" value="0" step="1" aria-label="Portfolio start month" data-portfolio-range-start>
                   <input type="range" min="0" value="0" step="1" aria-label="Portfolio end month" data-portfolio-range-end>
                 </div>
-                <p class="portfolio-range-caption" data-portfolio-range-caption></p>
+                <div class="portfolio-range-footer">
+                  <div class="portfolio-range-actions" aria-label="Quick time windows">
+                    <button type="button" data-portfolio-years="5">5Y</button>
+                    <button type="button" data-portfolio-years="10">10Y</button>
+                    <button type="button" data-portfolio-years="20">20Y</button>
+                    <button type="button" data-portfolio-years="30">30Y</button>
+                    <button type="button" data-portfolio-years="full">Full</button>
+                    <button type="button" class="portfolio-download" data-portfolio-download>Download CSV</button>
+                  </div>
+                  <p class="portfolio-range-caption" data-portfolio-range-caption></p>
+                </div>
               </div>
               <p class="chart-caption" data-portfolio-caption></p>
             </section>
 
-            <h3>Corporate bond long–short portfolio performance</h3>
+            <h3>Corporate bond High-minus-Low portfolio performance</h3>
             <p>
-              Bond portfolios use <code>monthly_return</code> (total return) until an excess-return field
-              is released. Characteristics and amount outstanding are lagged one month; amount outstanding
-              is the value-weighting variable.
+              These are standardized High-minus-Low sorting portfolios, not literature-signed trading strategies.
+              They use <code>monthly_return</code> (total return) until an excess-return field is released.
+              Characteristics and amount outstanding are lagged one month; amount outstanding is the value-weighting variable.
             </p>
             <section
               class="explorer about-portfolio"
               data-long-short-explorer
-              data-summary-url="data/bond_long_short_raw.json"
+              data-portfolio-id="bond"
+              data-summary-url="data/bond_long_short/index.json"
+              data-series-base-url="data/bond_long_short"
               data-return-label="Uses monthly_return (total return) until the release supplies a monthly excess-return field. Returns are formed from t−1 characteristics and amount outstanding."
             >
               <div class="explorer-controls">
                 <label>Characteristic <select data-portfolio-characteristic-select></select></label>
-                <label>Sort <select data-portfolio-quantiles-select><option value="5">Quintile 5−1</option><option value="10" selected>Decile 10−1</option></select></label>
+                <label>Sort <select data-portfolio-quantiles-select><option value="5">5 portfolios (top/bottom 20%)</option><option value="10" selected>10 portfolios (top/bottom 10%)</option></select></label>
                 <label>Weighting <select data-portfolio-weighting-select><option value="vw">Amount-outstanding weighted</option><option value="ew">Equal-weighted</option></select></label>
                 <label>Chart scale <select data-portfolio-scale-select><option value="log" selected>Log wealth multiple</option><option value="linear">Linear cumulative return</option></select></label>
-                <span class="muted" data-portfolio-status>Loading portfolios...</span>
               </div>
               <div class="portfolio-summary" data-portfolio-summary></div>
               <div class="chart-panel" data-portfolio-chart></div>
               <div class="portfolio-range" data-portfolio-range hidden>
+                <div class="portfolio-range-labels">
+                  <span data-portfolio-full-start></span>
+                  <span>Drag the handles to change the window</span>
+                  <span data-portfolio-full-end></span>
+                </div>
                 <div class="portfolio-range-track">
+                  <div class="portfolio-range-selection" data-portfolio-range-selection></div>
                   <input type="range" min="0" value="0" step="1" aria-label="Portfolio start month" data-portfolio-range-start>
                   <input type="range" min="0" value="0" step="1" aria-label="Portfolio end month" data-portfolio-range-end>
                 </div>
-                <p class="portfolio-range-caption" data-portfolio-range-caption></p>
+                <div class="portfolio-range-footer">
+                  <div class="portfolio-range-actions" aria-label="Quick time windows">
+                    <button type="button" data-portfolio-years="5">5Y</button>
+                    <button type="button" data-portfolio-years="10">10Y</button>
+                    <button type="button" data-portfolio-years="20">20Y</button>
+                    <button type="button" data-portfolio-years="30">30Y</button>
+                    <button type="button" data-portfolio-years="full">Full</button>
+                    <button type="button" class="portfolio-download" data-portfolio-download>Download CSV</button>
+                  </div>
+                  <p class="portfolio-range-caption" data-portfolio-range-caption></p>
+                </div>
               </div>
               <p class="chart-caption" data-portfolio-caption></p>
-              <p class="muted">Current release note: monthly_return and monthly_return_winsorized are identical and neither is winsorized.</p>
             </section>
           </div>
 
