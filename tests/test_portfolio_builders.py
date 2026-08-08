@@ -20,6 +20,7 @@ def load_module(name, relative_path):
 
 equity = load_module("equity_portfolios", "scripts/build_long_short_portfolios.py")
 bond = load_module("bond_portfolios", "scripts/build_bond_long_short_portfolios.py")
+splitter = load_module("split_portfolios", "scripts/split_long_short_json.py")
 
 
 class PortfolioBuilderTests(unittest.TestCase):
@@ -42,6 +43,14 @@ class PortfolioBuilderTests(unittest.TestCase):
             self.assertIn("geometric_mean_annualized", summary)
             self.assertIn("max_drawdown_monthly", summary)
             self.assertIn("max_drawdown_yearly", summary)
+
+            index_output = Path(directory) / "split" / "index.json"
+            series_directory = Path(directory) / "split"
+            splitter.split_payload(output, index_output, series_directory)
+            index = json.loads(index_output.read_text())
+            self.assertEqual(index["data_layout"], "per_characteristic")
+            self.assertEqual(index["characteristics"], ["me", "signal"])
+            self.assertEqual(json.loads((series_directory / "signal.json").read_text())["direction"], 1)
 
     def test_bond_builder_uses_lagged_signals_and_amount_outstanding_weights(self):
         with tempfile.TemporaryDirectory() as directory:

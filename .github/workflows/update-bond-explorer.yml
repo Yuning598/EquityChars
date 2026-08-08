@@ -56,6 +56,13 @@ jobs:
             --expected-characteristics 41 \
             --require-quantiles 5 10
 
+      - name: Build lazy-load bond portfolio files
+        run: |
+          python scripts/split_long_short_json.py \
+            --source chars/data/bond_long_short_raw.json \
+            --index-output chars/data/bond_long_short/index.json \
+            --series-directory chars/data/bond_long_short
+
       - name: Upload generated explorer data
         uses: actions/upload-artifact@v4
         with:
@@ -63,12 +70,13 @@ jobs:
           path: |
             chars/data/bond_monthly_raw.json
             chars/data/bond_long_short_raw.json
+            chars/data/bond_long_short
 
       - name: Commit generated explorer data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add chars/data/bond_monthly_raw.json chars/data/bond_long_short_raw.json
+          git add chars/data/bond_monthly_raw.json chars/data/bond_long_short_raw.json chars/data/bond_long_short
           if git diff --cached --quiet; then
             echo "No explorer data changes."
           else

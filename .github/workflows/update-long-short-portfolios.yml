@@ -59,6 +59,12 @@ jobs:
             --expected-characteristics 98 \
             --require-quantiles 5 10 \
             --directions documents/signal_directions.csv
+      - name: Build lazy-load portfolio files
+        run: |
+          python scripts/split_long_short_json.py \
+            --source chars/data/equity_long_short_raw_no_impute.json \
+            --index-output chars/data/equity_long_short/index.json \
+            --series-directory chars/data/equity_long_short
       - name: Commit portfolio summary
         run: |
           if git diff --quiet -- chars/data/equity_long_short_raw_no_impute.json; then
@@ -67,7 +73,7 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add chars/data/equity_long_short_raw_no_impute.json
+          git add chars/data/equity_long_short_raw_no_impute.json chars/data/equity_long_short
           git commit -F - <<'EOF'
           Refresh long-short portfolio data for the selected equity release
 
