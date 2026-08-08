@@ -25,7 +25,7 @@ from functions import ffi49, fillna_ind, fillna_all, standardize, INPUT_PATH, OU
 OBS_VARS = [
     'gvkey', 'permno', 'jdate', 'ticker', 'conm', 'comnam',
     'sic', 'ret', 'retx', 'retadj',
-    'exchcd', 'shrcd', 'prc', 'shrout',
+    'exchcd', 'shrcd', 'prc', 'shrout', 'size_grp',
 ]
 
 ACCOUNTING_VARS = [
