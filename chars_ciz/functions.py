@@ -278,6 +278,21 @@ def ffi12():
 #######################################################################################################################
 
 
+# 20261030fix-Match the same company and fiscal period, not merely the previous row.
+def lag(series, k, months):
+    """Quarterly: exact 3*k months; annual: retain the fiscal-end-change tolerance."""
+    prev = lambda e, j: e.shift(j).over('permno', order_by='datadate')
+    month = pl.col('datadate').dt.year() * 12 + pl.col('datadate').dt.month()
+    # 20261030fix-Short fiscal periods can put more than k reports inside 3*k months.
+    return pl.coalesce([
+        pl.when((prev(pl.col('gvkey'), j) == pl.col('gvkey')) &
+                ((month - prev(month, j) == k * months) if months == 3 else
+                 ((month - prev(month, j) - k * months).abs() < months)))
+        .then(prev(pl.col(series), j))
+        for j in range(1, (k * months if months == 3 else k) + 1)
+    ])
+
+
 def ttm4(series, df):
     """
     Calculate trailing 4-period sum (TTM4) using Polars.
@@ -289,13 +304,8 @@ def ttm4(series, df):
     Note: This function returns a Polars Expression for use in with_columns().
     Example: data_rawq.with_columns([ttm4('ibq', data_rawq).alias('ibq4')])
     """
-    # Build expression for sum of current + 3 lags
-    return (
-        pl.col(series) + 
-        pl.col(series).shift(1).over('permno') + 
-        pl.col(series).shift(2).over('permno') + 
-        pl.col(series).shift(3).over('permno')
-    )
+    # 20261030fix-Sum four consecutive quarters of the same company (null across gaps).
+    return pl.col(series) + lag(series, 1, 3) + lag(series, 2, 3) + lag(series, 3, 3)
 
 
 def ttm12(series, df):
@@ -309,21 +319,13 @@ def ttm12(series, df):
     Note: This function returns a Polars Expression for use in with_columns().
     Example: crsp_mom.with_columns([(ttm12('mdivpay', crsp_mom) / pl.col('me')).alias('dy')])
     """
-    # Build expression for sum of current + 11 lags
-    return (
-        pl.col(series) + 
-        pl.col(series).shift(1).over('permno') + 
-        pl.col(series).shift(2).over('permno') + 
-        pl.col(series).shift(3).over('permno') +
-        pl.col(series).shift(4).over('permno') + 
-        pl.col(series).shift(5).over('permno') + 
-        pl.col(series).shift(6).over('permno') + 
-        pl.col(series).shift(7).over('permno') +
-        pl.col(series).shift(8).over('permno') + 
-        pl.col(series).shift(9).over('permno') + 
-        pl.col(series).shift(10).over('permno') + 
-        pl.col(series).shift(11).over('permno')
-    )
+    # 20261030fix-JKP: require 12 consecutive calendar months; row shifts can span missing months.
+    month = pl.col('jdate').dt.year() * 12 + pl.col('jdate').dt.month()
+    complete = month - month.shift(11).over('permno', order_by='jdate') == 11
+    total = pl.col(series)
+    for i in range(1, 12):
+        total = total + pl.col(series).shift(i).over('permno', order_by='jdate')
+    return pl.when(complete).then(total)
 
 def fillna_atq(df_q: pl.DataFrame, df_a: pl.DataFrame):
     """

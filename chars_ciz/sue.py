@@ -12,7 +12,10 @@ from functions import INPUT_PATH, OUTPUT_PATH
 ###################
 comp = (
     pl.scan_parquet(INPUT_PATH + "comp_fundq.parquet")
-    .select(["gvkey", "datadate", "fyearq", "fqtr", "epspxq", "ajexq"])
+    .select(["gvkey", "datadate", "rdq", "fyearq", "fqtr", "epspxq", "ajexq"])
+    # 20261030fix-JKP: one report per gvkey/datadate (fiscal-year changes duplicate a datadate).
+    .sort(["gvkey", "datadate", "fyearq", "fqtr"])
+    .unique(["gvkey", "datadate"], keep="last", maintain_order=True)
     .collect()
 )
 
@@ -37,7 +40,7 @@ ccm2 = (
         (pl.col("datadate") >= pl.col("linkdt"))
         & (pl.col("datadate") <= pl.col("linkenddt"))
     )
-    .select(["gvkey", "permno", "datadate", "fyearq", "fqtr", "epspxq", "ajexq"])
+    .select(["gvkey", "permno", "datadate", "rdq", "fyearq", "fqtr", "epspxq", "ajexq"])
 )
 
 # Calculate EPS = epspxq / ajexq
@@ -50,26 +53,16 @@ ccm2 = ccm2.unique(subset=["permno", "datadate"])
 ccm2 = ccm2.filter(pl.col("eps").is_not_null())
 ccm2 = ccm2.sort(["permno", "datadate"])
 
-# Create count for each permno
-ccm2 = ccm2.with_columns([
-    pl.col("eps").cum_count().over("permno").alias("count")
-])
+# 20261030fix-HXZ A.1.1: an rdq on or before the quarter end is erroneous; drop it.
+ccm2 = ccm2.with_columns(pl.when(pl.col("rdq") > pl.col("datadate")).then(pl.col("rdq")).alias("rdq"))
 
-# Create lag variables e1 to e12
-ccm2 = ccm2.with_columns([
-    pl.col("eps").shift(1).over("permno").alias("e1"),
-    pl.col("eps").shift(2).over("permno").alias("e2"),
-    pl.col("eps").shift(3).over("permno").alias("e3"),
-    pl.col("eps").shift(4).over("permno").alias("e4"),
-    pl.col("eps").shift(5).over("permno").alias("e5"),
-    pl.col("eps").shift(6).over("permno").alias("e6"),
-    pl.col("eps").shift(7).over("permno").alias("e7"),
-    pl.col("eps").shift(8).over("permno").alias("e8"),
-    pl.col("eps").shift(9).over("permno").alias("e9"),
-    pl.col("eps").shift(10).over("permno").alias("e10"),
-    pl.col("eps").shift(11).over("permno").alias("e11"),
-    pl.col("eps").shift(12).over("permno").alias("e12"),
-])
+# 20261030fix-Lag k = the same company's quarter 3k months earlier (row shifts skipped missing
+# quarters); history comes from Compustat by gvkey, including quarters before the CRSP link.
+hist = (comp.select("gvkey", "datadate", (pl.col("epspxq") / pl.col("ajexq").replace(0, None)).alias("eps"))
+        .drop_nulls("eps").unique(["gvkey", "datadate"]))
+for k in range(1, 13):
+    ccm2 = ccm2.join(hist.with_columns(pl.col("datadate").dt.offset_by(f"{3 * k}mo").dt.month_end())
+                     .rename({"eps": f"e{k}"}), on=["gvkey", "datadate"], how="left")
 
 # Compute YoY differences: e{i}_diff = e{i} - e{i+4}
 # Matches SIZ: std is computed on 4-quarter EPS differences, not raw levels
@@ -78,31 +71,20 @@ ccm2 = ccm2.with_columns([
     for i in range(1, 9)
 ])
 
-# Calculate sue_std based on count
-# Using row-wise std on YoY differences, requires >= 6 non-null values
-cols_6 = ["e6_diff", "e5_diff", "e4_diff", "e3_diff", "e2_diff", "e1_diff"]
-cols_7 = ["e7_diff", "e6_diff", "e5_diff", "e4_diff", "e3_diff", "e2_diff", "e1_diff"]
+# Std of YoY differences over the prior eight quarters, at least six non-null (HXZ A.1.1)
 cols_8 = ["e8_diff", "e7_diff", "e6_diff", "e5_diff", "e4_diff", "e3_diff", "e2_diff", "e1_diff"]
 
 def std_with_zero_handling(cols, min_valid=6):
     """Row-wise std of YoY EPS differences; returns None if < min_valid non-null, 0 if all equal."""
-    concat_expr = pl.concat_list(cols)
-    valid_count = concat_expr.list.eval(pl.element().is_not_null().cast(pl.Int32).sum()).list.first()
-    all_equal = concat_expr.list.max() == concat_expr.list.min()
-    std_val = concat_expr.list.eval(pl.element().std()).list.first()
+    # 20261030fix-Count non-null differences directly instead of counting records.
+    concat_expr = pl.concat_list(cols).list.drop_nulls()
     return (
-        pl.when(valid_count < min_valid).then(pl.lit(None, dtype=pl.Float64))
-        .when(all_equal).then(pl.lit(0.0))
-        .otherwise(std_val)
+        pl.when(concat_expr.list.len() < min_valid).then(pl.lit(None, dtype=pl.Float64))
+        .when(concat_expr.list.max() == concat_expr.list.min()).then(pl.lit(0.0))
+        .otherwise(concat_expr.list.std(ddof=1))
     )
 
-ccm2 = ccm2.with_columns([
-    pl.when(pl.col("count") <= 6).then(None)
-      .when(pl.col("count") == 7).then(std_with_zero_handling(cols_6))
-      .when(pl.col("count") == 8).then(std_with_zero_handling(cols_7))
-      .otherwise(std_with_zero_handling(cols_8))
-      .alias("sue_std")
-])
+ccm2 = ccm2.with_columns([std_with_zero_handling(cols_8).alias("sue_std")])
 
 # Calculate SUE
 ccm2 = ccm2.with_columns([
@@ -116,14 +98,16 @@ print(f"Calculated SUE: {ccm2.shape}")
 ###################
 crsp_msf = (
     pl.scan_parquet(INPUT_PATH + "crsp_msf.parquet")
-    .select(pl.col("mthcaldt").alias("date"))
+    .select(pl.col("mthcaldt").dt.month_end().alias("date"))
     .unique()
     .collect()
 )
 
-# Add plus12m column
+# 20261030fix-Keep the original 12-month validity; HXZ A.1.1 controls announcement timing.
+# Before 1972 use quarters ending at least four months earlier, from 1972 on use rdq.
 ccm2 = ccm2.with_columns([
-    (pl.col("datadate").dt.offset_by("12mo").dt.month_end()).alias("plus12m")
+    (pl.col("datadate").dt.offset_by("12mo").dt.month_end()).alias("plus12m"),
+    (pl.col("datadate").dt.offset_by("4mo").dt.month_end()).alias("plus4m")
 ])
 
 ###################
@@ -139,6 +123,7 @@ df = con.execute("""
     LEFT JOIN crsp_msf b 
         ON a.datadate <= b.date
         AND a.plus12m >= b.date
+        AND (CASE WHEN b.date < DATE '1972-01-01' THEN a.plus4m ELSE a.rdq END) <= b.date
     ORDER BY a.permno, b.date, a.datadate DESC
 """).pl()
 

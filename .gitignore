@@ -202,3 +202,40 @@ wrds/
 *.xlsx
 *.png
 *.pdf
+
+# Track source code and Git configuration; keep data and documents local.
+*
+!*/
+!*.py
+!*.pyi
+!*.sas
+!*.sql
+!*.sh
+!*.R
+!*.r
+!*.js
+!*.ts
+!*.tsx
+!*.jsx
+!.gitignore
+
+# Exclude generated environments and build artifacts even when they contain code.
+**/.venv/
+**/venv/
+**/env/
+**/__pycache__/
+**/node_modules/
+**/.git/
+**/.cache/
+**/build/
+**/dist/
+/data/
+
+# Keep reference and fix documents local.
+/documents/
+
+# Keep local checks and their results out of Git.
+/check_data/
+
+# Keep the local monthly pipeline out of Git.
+/chars_ciz_monthly/

@@ -1,4 +1,5 @@
 import os
+import tempfile
 import duckdb
 import polars as pl
 import time
@@ -47,7 +48,7 @@ def gen_wrds_connection_info(user, password):
     )
 
 
-def _execute_download(con, table_name, query, output_file):
+def _execute_download(con, table_name, query, output_file, start_date):
     """
     Helper function to execute a single table download.
     
@@ -56,16 +57,35 @@ def _execute_download(con, table_name, query, output_file):
         table_name: Name of table for logging
         query: SQL query to execute on WRDS
         output_file: Path to save parquet file
+        start_date: Replace this date range, retaining earlier local history
     """
     print(f"Downloading {table_name}...", flush=True)
-    
-    con.execute(f"""
-        COPY (
-            SELECT * FROM postgres_query('wrds', '{query}')
-        )
-        TO '{output_file}' (FORMAT PARQUET);
-    """)
-    
+
+    source = f"SELECT * FROM postgres_query('wrds', '{query}')"
+    date_columns = {'comp_funda': 'datadate', 'comp_fundq': 'datadate',
+                    'crsp_msf': 'mthcaldt', 'crsp_dsf': 'dlycaldt',
+                    'crsp_ind': 'dlycaldt', 'ibes': 'statpers'}
+    if os.path.exists(output_file):
+        if table_name == 'comp_security_first':
+            # 20261030fix-JKP: retain each company's earliest security-history date.
+            source = f"""SELECT gvkey, MIN(first_sec_date) AS first_sec_date FROM (
+                SELECT * FROM read_parquet('{output_file}') UNION ALL BY NAME {source}) GROUP BY gvkey"""
+        elif table_name in date_columns:
+            # 20261030fix-Preserve old history; replace only the requested overlap range.
+            source = f"""SELECT * FROM read_parquet('{output_file}')
+                WHERE {date_columns[table_name]} < DATE '{start_date}' UNION ALL BY NAME {source}"""
+
+    # 20261030fix-Replace the local file only after the COPY succeeds (CCM remains a full refresh).
+    with tempfile.TemporaryDirectory(dir=os.path.dirname(output_file) or '.') as work:
+        updated = os.path.join(work, 'updated.parquet')
+        con.execute(f"""
+            COPY (
+                {source}
+            )
+            TO '{updated}' (FORMAT PARQUET);
+        """)
+        os.replace(updated, output_file)
+
     file_size_mb = os.path.getsize(output_file) / (1024 * 1024)
     print(f"{table_name} saved to {output_file} ({file_size_mb:.1f} MB)", flush=True)
 
@@ -85,7 +105,21 @@ def get_tables_config(start_date='2020-01-01'):
     Returns:
         Dictionary of table configurations with 'output' and 'query' keys
     """
+    # 20261030fix-JKP: bootstrap full AGE history once, then query only the update range.
+    security_filter = (f"AND datadate >= ''{start_date}''"
+                       if os.path.exists(os.path.join(OUTPUT_PATH, 'comp_security_first.parquet')) else '')
     return {
+        'comp_security_first': {
+            'output': os.path.join(OUTPUT_PATH, 'comp_security_first.parquet'),
+            'query': f"""
+                SELECT gvkey, MIN(datadate) AS first_sec_date
+                FROM comp.secm
+                WHERE gvkey IS NOT NULL AND datadate IS NOT NULL
+                {security_filter}
+                GROUP BY gvkey
+            """
+        },
+
         'comp_funda': {
             'output': os.path.join(OUTPUT_PATH, 'comp_funda.parquet'),
             'query': f"""
@@ -214,7 +248,7 @@ def get_tables_config(start_date='2020-01-01'):
 
         'ibes': {
             'output': os.path.join(OUTPUT_PATH, 'ibes.parquet'),
-            'query': """
+            'query': f"""
                 SELECT
                     ticker, statpers, meanest, fpedats, anndats_act, curr_act, fpi, medest
                 FROM ibes.statsum_epsus
@@ -222,9 +256,10 @@ def get_tables_config(start_date='2020-01-01'):
                     /* filtering IBES */
                     statpers < ANNDATS_ACT      /*only keep summarized forecasts prior to earnings annoucement*/
                 AND measure=''EPS''
-                AND (fpedats-statpers)>=0
+                /* 20261030fix-HXZ A.1.3: keep FY1 after fiscal year end until actual earnings are announced. */
                 AND CURCODE=''USD''
                 AND fpi in (''1'',''2'')
+                AND statpers >= ''{start_date}''
             """
         }
     }
@@ -235,7 +270,7 @@ def get_tables_config(start_date='2020-01-01'):
 @measure_time
 def download_all_tables(username, password, start_date='2023-01-01'):
     """
-    Download all required tables from WRDS with fresh connection per table to avoid timeouts.
+    Update all required local tables from WRDS, retaining history before start_date.
     
     Creates a new DuckDB/WRDS connection for each table download to prevent
     connection timeout issues during long multi-table downloads.
@@ -243,10 +278,10 @@ def download_all_tables(username, password, start_date='2023-01-01'):
     Args:
         username: WRDS username
         password: WRDS password
-        start_date: Filter for datadate >= start_date (default '2020-01-01')
+        start_date: Refresh rows from this date; retain earlier local history (default '2023-01-01')
         
     Output:
-        Parquet files for comp_funda, crsp_msf, and ccm.
+        Parquet files for all configured tables.
     """
     os.makedirs(OUTPUT_PATH, exist_ok=True)
     
@@ -267,7 +302,8 @@ def download_all_tables(username, password, start_date='2023-01-01'):
                 con=con,
                 table_name=table_name,
                 query=config['query'],
-                output_file=config['output']
+                output_file=config['output'],
+                start_date=start_date
             )
         finally:
             con.close()
@@ -280,5 +316,6 @@ if __name__ == "__main__":
     username = input("Enter WRDS username: ")
     password = input("Enter WRDS password: ")
     
-    # Download all tables in one session (recommended to avoid connection timeouts)
-    download_all_tables(username, password, start_date='1940-01-01')
+    # Download all tables with a fresh connection per table
+    # 20261030fix-Change only the overlap start for incremental updates.
+    download_all_tables(username, password, start_date='2025-01-01')

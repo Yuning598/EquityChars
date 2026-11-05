@@ -19,7 +19,9 @@ iclink = iclink.rename({'issuernm': 'comnam'})
 ibes = pl.scan_parquet(INPUT_PATH + 'ibes.parquet')
 
 # Filtering IBES
+# 20261030fix-HXZ A.1.3: current fiscal year forecasts only (FPI = 1).
 ibes = ibes.filter(
+    (pl.col('fpi') == '1') &
     pl.col('medest').is_not_null() &
     pl.col('fpedats').is_not_null()
 )
@@ -45,7 +47,8 @@ crsp_msf = crsp_msf.with_columns([
 ibes_iclink = ibes.join(iclink, on='ticker', how='left')
 
 # Merge with CRSP
-ibes_crsp = ibes_iclink.join(crsp_msf, on=['permno', 'merge_date'], how='inner')
+# 20261030fix-Duplicate downloads must not become the previous month's forecast.
+ibes_crsp = ibes_iclink.unique(subset=['ticker', 'permno', 'statpers', 'fpedats', 'meanest', 'medest'])
 ibes_crsp = ibes_crsp.sort(['ticker', 'fpedats', 'statpers'])
 
 ###############################
@@ -54,9 +57,12 @@ ibes_crsp = ibes_crsp.sort(['ticker', 'fpedats', 'statpers'])
 
 # Create last month columns using partitioned shift (no guard needed)
 ibes_crsp = ibes_crsp.with_columns([
-    pl.col('statpers').shift(1).over(['ticker', 'fpedats']).alias('statpers_last_month'),
-    pl.col('meanest').shift(1).over(['ticker', 'fpedats']).alias('meanest_last_month'),
+    pl.col('statpers').shift(1).over(['ticker', 'permno', 'fpedats']).alias('statpers_last_month'),
+    pl.col('meanest').shift(1).over(['ticker', 'permno', 'fpedats']).alias('meanest_last_month'),
 ])
+
+# 20261030fix-Compute forecast lags before attaching prices, so missing prices cannot erase history.
+ibes_crsp = ibes_crsp.join(crsp_msf, on=['permno', 'merge_date'], how='left')
 
 # Re-sort
 ibes_crsp = ibes_crsp.sort(['ticker', 'permno', 'fpedats', 'statpers'])
@@ -66,62 +72,45 @@ ibes_crsp = ibes_crsp.sort(['ticker', 'permno', 'fpedats', 'statpers'])
 # Calculate HXZ RE        #
 ###########################
 
-ibes_crsp = ibes_crsp.filter(pl.col('statpers_last_month').is_not_null())
+# 20261030fix-Keep null rollover revisions so the window still reaches earlier FY1 months.
 
 # Calculate adjusted price and monthly revision
 ibes_crsp = ibes_crsp.with_columns([
-    (pl.col('prc') / pl.col('cfacpr')).alias('prc_adj')
+    # 20261030fix-Reverse splits can underflow the Decimal adjustment factor to zero.
+    (pl.col('prc').cast(pl.Float64) / pl.col('cfacpr').cast(pl.Float64).replace(0, None)).alias('prc_adj')
 ])
 
-ibes_crsp = ibes_crsp.filter(pl.col('prc_adj') > 0)
 
+# 20261030fix-A revision compares consecutive calendar months; a skipped month is not a monthly change.
+month_id = pl.col('statpers').dt.year() * 12 + pl.col('statpers').dt.month()
+prev_month_id = pl.col('statpers_last_month').dt.year() * 12 + pl.col('statpers_last_month').dt.month()
 ibes_crsp = ibes_crsp.with_columns([
-    ((pl.col('meanest') - pl.col('meanest_last_month')) / pl.col('prc_adj')).alias('monthly_revision')
+    pl.when((month_id - prev_month_id == 1) & (pl.col('prc_adj') > 0))
+    .then((pl.col('meanest') - pl.col('meanest_last_month')) / pl.col('prc_adj'))
+    .alias('monthly_revision')
 ])
 
-# Create permno_fpedats identifier
-ibes_crsp = ibes_crsp.with_columns([
-    (pl.col('permno').cast(pl.Utf8) + '-' + pl.col('fpedats').cast(pl.Utf8)).alias('permno_fpedats')
-])
-
-# Drop duplicates and add count
-ibes_crsp = ibes_crsp.unique(subset=['permno_fpedats', 'statpers'], keep='first')
-ibes_crsp = ibes_crsp.with_columns([
-    pl.col('permno_fpedats').cum_count().over('permno_fpedats').alias('count')
-])
+# 20261030fix-One FY1 row per stock-month; the six-month window spans fiscal-year rollovers.
+ibes_crsp = (ibes_crsp.sort(['permno', 'statpers', 'ticker'])
+             .unique(subset=['permno', 'statpers'], keep='first', maintain_order=True))
 
 ##################
 # Calculate RE   #
 ##################
 
-# Create lagged monthly_revision columns (partition by permno_fpedats to avoid mixing forecast periods)
+# 20261030fix-HXZ A.1.3: sum t-5..t with at least four revisions, instead of averaging stale rows.
+prev = lambda c, j: c.shift(j).over('permno', order_by='statpers')
 ibes_crsp = ibes_crsp.with_columns([
-    pl.col('monthly_revision').shift(1).over('permno_fpedats').alias('monthly_revision_l1'),
-    pl.col('monthly_revision').shift(2).over('permno_fpedats').alias('monthly_revision_l2'),
-    pl.col('monthly_revision').shift(3).over('permno_fpedats').alias('monthly_revision_l3'),
-    pl.col('monthly_revision').shift(4).over('permno_fpedats').alias('monthly_revision_l4'),
-    pl.col('monthly_revision').shift(5).over('permno_fpedats').alias('monthly_revision_l5'),
-    pl.col('monthly_revision').shift(6).over('permno_fpedats').alias('monthly_revision_l6')
+    # month t-k is at most k rows back (fewer when IBES skips a month)
+    pl.coalesce([pl.when(month_id - prev(month_id, j) == k).then(prev(pl.col('monthly_revision'), j))
+                 for j in range(1, k + 1)]).alias(f'monthly_revision_l{k}')
+    for k in range(1, 6)
 ])
-
-# Calculate RE based on count
-ibes_crsp = ibes_crsp.with_columns([
-    pl.when(pl.col('count') == 4)
-    .then((pl.col('monthly_revision_l1') + pl.col('monthly_revision_l2') + pl.col('monthly_revision_l3')) / 3)
-    .when(pl.col('count') == 5)
-    .then((pl.col('monthly_revision_l1') + pl.col('monthly_revision_l2') + pl.col('monthly_revision_l3') + pl.col('monthly_revision_l4')) / 4)
-    .when(pl.col('count') == 6)
-    .then((pl.col('monthly_revision_l1') + pl.col('monthly_revision_l2') + pl.col('monthly_revision_l3') + pl.col('monthly_revision_l4') + pl.col('monthly_revision_l5')) / 5)
-    .when(pl.col('count') >= 7)
-    .then((pl.col('monthly_revision_l1') + pl.col('monthly_revision_l2') + pl.col('monthly_revision_l3') + pl.col('monthly_revision_l4') + pl.col('monthly_revision_l5') + pl.col('monthly_revision_l6')) / 6)
-    .otherwise(None)
-    .alias('re')
-])
+revisions = pl.concat_list(['monthly_revision'] + [f'monthly_revision_l{k}' for k in range(1, 6)]).list.drop_nulls()
+ibes_crsp = ibes_crsp.with_columns(pl.when(revisions.list.len() >= 4).then(revisions.list.sum()).alias('re'))
 
 # Filter and finalize
-ibes_crsp = ibes_crsp.filter(pl.col('count') >= 4)
-ibes_crsp = ibes_crsp.sort(['ticker', 'statpers', 'fpedats'])
-ibes_crsp = ibes_crsp.unique(subset=['ticker', 'statpers'], keep='first')
+ibes_crsp = ibes_crsp.filter(pl.col('re').is_not_null())
 
 # Select final columns and rename
 ibes_crsp = ibes_crsp.select(['ticker', 'statpers', 'fpedats', 'anndats_act', 'curr_act', 'permno', 're'])

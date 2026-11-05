@@ -111,8 +111,9 @@ def _build_crsp_backfill():
     crsp = crsp.filter(pl.col('prc').is_not_null())
     crsp = crsp.with_columns([
         (pl.col('prc').abs() * pl.col('shrout')).alias('me'),
-        pl.col('ret').cast(pl.Float64).fill_null(0),
-        pl.col('retx').cast(pl.Float64).fill_null(0),
+        # 20261030fix-Missing monthly returns must remain null in final return labels.
+        pl.col('ret').cast(pl.Float64),
+        pl.col('retx').cast(pl.Float64),
     ])
 
     # aggregate me: assign sum-of-permco-me to the permno with the largest me

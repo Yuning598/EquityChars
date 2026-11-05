@@ -105,16 +105,54 @@ def _reconcile(df_a, df_q):
         df_q.select(q_cols)
         .rename({v: q_prefix[v] for v in ACCOUNTING_VARS if v in q_cols})
         .drop([c for c in q_drop if c in q_cols])
+        .rename({'gvkey': 'q_gvkey'})
     )
 
     # merge
-    df = df_a_sel.join(df_q_sel, on=['gvkey', 'permno', 'jdate'], how='left')
+    # 20261030fix-Merge by stock-month; mask invalid CCM links, old companies and expired reports.
+    df = df_a_sel.join(df_q_sel, on=['permno', 'jdate'], how='left')
+    # 20261030fix-JKP: validate each company's CCM link at the formation month, not only report date.
+    links = pl.read_parquet(INPUT_PATH + 'ccm.parquet').select(
+        'permno', 'gvkey', 'linkdt', 'linkenddt').with_columns(
+            pl.col('permno').cast(df['permno'].dtype))
+    valid = (df.select('permno', 'jdate').unique().join(links, on='permno')
+        .filter((pl.col('jdate') >= pl.col('linkdt')) &
+                (pl.col('linkenddt').is_null() | (pl.col('jdate') <= pl.col('linkenddt'))))
+        .select('permno', 'jdate', 'gvkey').unique().with_columns(pl.lit(True).alias('_link_valid')))
+    df = (df.join(valid.rename({'_link_valid': '_a_link'}), on=['permno', 'jdate', 'gvkey'], how='left')
+        .join(valid.rename({'gvkey': 'q_gvkey', '_link_valid': '_q_link'}),
+              on=['permno', 'jdate', 'q_gvkey'], how='left'))
+    switch = pl.col('gvkey').is_not_null() & pl.col('q_gvkey').is_not_null() & (pl.col('gvkey') != pl.col('q_gvkey'))
+    # 20261030fix-CZ/JKP: annual/quarterly information expires 15/12 months after the fiscal end.
+    months_since = lambda d: (pl.col('jdate').dt.year() - pl.col(d).dt.year()) * 12 + \
+                             pl.col('jdate').dt.month() - pl.col(d).dt.month()
+    switched_a = switch & (pl.col('a_datadate') < pl.col('q_datadate'))
+    stale_a = ~pl.col('_a_link').fill_null(False) | switched_a | (months_since('a_datadate') > 15).fill_null(False)
+    stale_q = ~pl.col('_q_link').fill_null(False) | (switch & (pl.col('q_datadate') < pl.col('a_datadate'))) | \
+              (months_since('q_datadate') > 12).fill_null(False)
+    a_fields = [c for c in df.columns if c.startswith('a_') or c in A_ONLY_VARS]
+    q_fields = [c for c in df.columns if c.startswith('q_') and c not in ('q_gvkey', 'q_roa')] + \
+               [c for c in ['cinvest', 'nincr', 'pscore', 'roavol'] if c in df.columns]
+    df = df.with_columns(
+        [pl.when(~stale_a).then(pl.col(c)).alias(c) for c in a_fields] +
+        [pl.when(~stale_q).then(pl.col(c)).alias(c) for c in q_fields] +
+        [pl.when(pl.col('_q_link').fill_null(False)).then(pl.col(c)).alias(c)
+         for c in ['abr', 'sue', 'q_roa'] if c in df.columns] +
+        [pl.when(switched_a | ~pl.col('_a_link').fill_null(False))
+         .then(pl.when(pl.col('_q_link').fill_null(False)).then(pl.col('q_gvkey')))
+         .otherwise(pl.col('gvkey')).alias('gvkey')]
+    ).drop('q_gvkey', '_a_link', '_q_link')
 
     # reconcile each overlapping variable (skip datadate)
     for var in tqdm(ACCOUNTING_VARS[1:], desc='Reconciling A/Q'):
         a_col, q_col = f'a_{var}', f'q_{var}'
         has_a = a_col in df.columns
         has_q = q_col in df.columns
+
+        # 20261030fix-HXZ ROA is quarterly only; never substitute annual profitability.
+        if var == 'roa':
+            df = df.with_columns(pl.col(q_col).alias(var)).drop([c for c in [a_col, q_col] if c in df.columns])
+            continue
 
         if not has_a and not has_q:
             df = df.with_columns(pl.lit(None).alias(var))
@@ -144,13 +182,15 @@ def _reconcile(df_a, df_q):
 def _shift_return(df):
     """Shift return forward one month: t characteristics predict t+1 return."""
     df = df.sort(['permno', 'jdate'])
+    # 20261030fix-Require the next calendar month; retain missing labels until after filling/ranking.
     df = df.with_columns([
-        pl.col('ret').shift(-1).over('permno').alias('ret_lead'),
-        pl.col('jdate').shift(-1).over('permno').alias('date'),
+        pl.when(pl.col('jdate').shift(-1).over('permno') == pl.col('jdate').dt.offset_by('1mo').dt.month_end())
+          .then(pl.col('ret').shift(-1).over('permno')).alias('ret_lead'),
+        pl.col('jdate').dt.offset_by('1mo').dt.month_end().alias('date'),
     ])
     df = df.drop('ret').rename({'ret_lead': 'ret'})
 
-    df = df.filter(pl.col('ret').is_not_null()).drop('jdate')
+    df = df.drop('jdate')
     return _replace_inf(df)
 
 
@@ -178,6 +218,25 @@ def _rank_df(df):
     rank_cols = [c for c in out.columns if c.startswith('rank_')]
     out = out.with_columns([pl.col(c).fill_null(0) for c in rank_cols])
     return out
+
+
+# 20261030fix-JKP: age is months since the earliest available company/security history.
+def firm_age(df):
+    msf = pl.read_parquet(INPUT_PATH + 'crsp_msf.parquet', columns=['permno', 'permco', 'mthcaldt'])
+    first = msf.group_by('permco').agg(pl.col('mthcaldt').min().alias('_crsp_first'))
+    links = msf.join(first, on='permco').select(
+        pl.col('permno').cast(pl.Int64), pl.col('mthcaldt').dt.month_end().alias('jdate'), '_crsp_first')
+    acc = (pl.read_parquet(INPUT_PATH + 'comp_funda.parquet', columns=['gvkey', 'datadate'])
+           .group_by('gvkey').agg(pl.col('datadate').min().alias('_acc_first'))
+           .with_columns(pl.date(pl.col('_acc_first').dt.year()-1, 12, 31).alias('_acc_first')))
+    # 20261030fix-JKP: include the earliest North American Compustat security record.
+    sec = (pl.read_parquet(INPUT_PATH + 'comp_security_first.parquet')
+           .select('gvkey', pl.date(pl.col('first_sec_date').dt.year()-1, 12, 31).alias('_sec_first')))
+    df = (df.join(links, on=['permno', 'jdate'], how='left', validate='m:1')
+          .join(acc, on='gvkey', how='left').join(sec, on='gvkey', how='left', validate='m:1'))
+    start = pl.min_horizontal('_crsp_first', '_acc_first', '_sec_first', pl.col('jdate').min().over('permno'))
+    return df.with_columns(((pl.col('jdate').dt.year()-start.dt.year())*12 +
+                            pl.col('jdate').dt.month()-start.dt.month()).alias('age')).drop('_crsp_first', '_acc_first', '_sec_first')
 
 
 # =====================================================================
@@ -210,7 +269,7 @@ if __name__ == '__main__':
     # Reconcile annual / quarterly
     # ------------------------------------------------------------------
     print("Reconciling annual & quarterly...", flush=True)
-    df = _reconcile(chars_a, chars_q)
+    df = firm_age(_reconcile(chars_a, chars_q))
 
     # ------------------------------------------------------------------
     # Shift return forward
@@ -233,7 +292,7 @@ if __name__ == '__main__':
     # Output 1: raw (no imputation)
     # ------------------------------------------------------------------
     print("Saving chars_raw_no_impute.parquet ...", flush=True)
-    df.write_parquet(OUTPUT_PATH + 'chars_raw_no_impute.parquet')
+    df.filter(pl.col('ret').is_not_null()).write_parquet(OUTPUT_PATH + 'chars_raw_no_impute.parquet')
 
     # ------------------------------------------------------------------
     # Output 2: imputed (industry-median → cross-sectional-median)
@@ -243,15 +302,15 @@ if __name__ == '__main__':
     df_impute = df_impute.with_columns(pl.col('date').cast(pl.Date))
     df_impute = _replace_inf(df_impute)
 
-    df_impute = fillna_ind(df_impute, method='median', ffi=49, not_fill_col=OBS_VARS)
-    df_impute = fillna_all(df_impute, method='median', not_fill_col=OBS_VARS)
+    df_impute = fillna_ind(df_impute, method='median', ffi=49, not_fill_col=OBS_VARS + ['date', 'ffi49'])
+    df_impute = fillna_all(df_impute, method='median', not_fill_col=OBS_VARS + ['date', 'ffi49'])
 
     # IBES-based `re` has sparse coverage → fill remaining with 0
     if 're' in df_impute.columns:
         df_impute = df_impute.with_columns(pl.col('re').fill_null(0))
 
     print("Saving chars_raw_imputed.parquet ...", flush=True)
-    df_impute.write_parquet(OUTPUT_PATH + 'chars_raw_imputed.parquet')
+    df_impute.filter(pl.col('ret').is_not_null()).write_parquet(OUTPUT_PATH + 'chars_raw_imputed.parquet')
 
     # ------------------------------------------------------------------
     # Output 3: ranked (no imputation)
@@ -259,7 +318,7 @@ if __name__ == '__main__':
     print("Ranking (no impute)...", flush=True)
     df_rank = _rank_df(df)
     print("Saving chars_rank_no_impute.parquet ...", flush=True)
-    df_rank.write_parquet(OUTPUT_PATH + 'chars_rank_no_impute.parquet')
+    df_rank.filter(pl.col('ret').is_not_null()).write_parquet(OUTPUT_PATH + 'chars_rank_no_impute.parquet')
     del df_rank
 
     # ------------------------------------------------------------------
@@ -268,4 +327,4 @@ if __name__ == '__main__':
     print("Ranking (imputed)...", flush=True)
     df_rank_imp = _rank_df(df_impute)
     print("Saving chars_rank_imputed.parquet ...", flush=True)
-    df_rank_imp.write_parquet(OUTPUT_PATH + 'chars_rank_imputed.parquet')
+    df_rank_imp.filter(pl.col('ret').is_not_null()).write_parquet(OUTPUT_PATH + 'chars_rank_imputed.parquet')

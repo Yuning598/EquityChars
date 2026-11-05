@@ -15,6 +15,9 @@ num_threads = max(1, os.cpu_count() // 2)
 comp = (
     pl.scan_parquet(INPUT_PATH + "comp_fundq.parquet")
     .select(["gvkey", "datadate", "rdq", "fyearq", "fqtr"])
+    # 20261030fix-JKP: one report per gvkey/datadate (fiscal-year changes duplicate a datadate).
+    .sort(["gvkey", "datadate", "fyearq", "fqtr"])
+    .unique(["gvkey", "datadate"], keep="last", maintain_order=True)
     .with_columns(
         pl.col("datadate").cast(pl.Date),
         pl.col("rdq").cast(pl.Date),
@@ -65,6 +68,8 @@ trading_days = (
 # Find the closest trading day (rdq_trad) on or after rdq
 ccm1 = (
     ccm_merged
+    # 20261030fix-HXZ A.1.2: require an announcement date after the fiscal quarter end.
+    .filter(pl.col("rdq").is_not_null() & (pl.col("rdq") > pl.col("datadate")))
     .sort("rdq")
     .join_asof(
         trading_days,
@@ -91,7 +96,7 @@ crsp_d = (
     .collect()
 )
 
-# Abnormal return = stock total return - CRSP VW market total return
+# Abnormal return = stock total return - Fama-French market total return
 crsp_d = (
     crsp_d.with_columns(
         (pl.col("ret") - pl.col("mkt")).alias("abrd")
@@ -113,6 +118,10 @@ con = duckdb.connect(":memory:")
 try:
     con.execute(f"SET threads TO {num_threads};")
 
+    # 20261030fix-One announcement can carry several fiscal quarters (e.g. late filers); keep one event
+    # (latest quarter), otherwise each daily return is joined and counted once per quarter.
+    ccm1 = (ccm1.sort(["permno", "rdq_trad", "datadate"])
+            .unique(subset=["permno", "rdq_trad"], keep="last", maintain_order=True))
     con.register("ccm_data", ccm1.to_arrow())
     con.register("crsp_data", crsp_d.to_arrow())
 
@@ -127,8 +136,8 @@ try:
         ORDER BY a.permno, a.rdq_trad, b.date
     """).pl()
 
-    # Filter out missing returns
-    df = df.filter(pl.col("abrd").is_not_null())
+    # 20261030fix-Count trading days before dropping missing returns, so a missing return does not
+    # shift the [-2, +1] window onto other days (null returns are skipped by the sum).
 
     ###############################
     #    Count trading days       #
@@ -173,7 +182,7 @@ try:
     # Sum abnormal returns by group
     df_abr = (
         df.group_by(["permno", "rdq_trad"])
-        .agg(pl.col("abrd").sum().alias("abr"))
+        .agg(pl.when(pl.col("abrd").count() > 0).then(pl.col("abrd").sum()).alias("abr"))
     )
 
     # Join ABR back and keep only count == 1 rows (rdq + 1 day)
